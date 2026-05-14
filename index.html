@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CardioLink — Patient Diary + ECG Fusion Platform</title>
+<style>
+  :root {
+    --bg0: #050810;
+    --bg1: #0a1220;
+    --bg2: #11192a;
+    --line: #1e2a40;
+    --lineHot: #2a4060;
+    --ink: #d6e3f5;
+    --inkDim: #8a9bb5;
+    --inkFaint: #5d6b82;
+    --cyan: #00e5ff;
+    --amber: #ffb547;
+    --red: #ff4d6d;
+    --green: #4ade80;
+    --violet: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg0);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Apple SD Gothic Neo", sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  .mono { font-family: "SF Mono", "Menlo", "Consolas", monospace; }
+
+  /* Top nav — language + mode toggle */
+  .top-nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(5, 8, 16, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .brand {
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 16px; font-weight: 800; letter-spacing: 3px;
+    color: var(--cyan);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand-icon { width: 28px; height: 28px; border-radius: 6px; box-shadow: 0 0 8px rgba(0,229,255,0.4); }
+  .brand-dot { width: 8px; height: 8px; background: var(--cyan); border-radius: 50%; box-shadow: 0 0 12px var(--cyan); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 50% { opacity: 0.3; transform: scale(1.4); } }
+
+  /* Hero icon */
+  .hero-icon-row {
+    display: flex; align-items: center; gap: 18px; margin-bottom: 24px;
+  }
+  .hero-icon-big {
+    width: 88px; height: 88px; border-radius: 18px;
+    box-shadow: 0 0 24px rgba(0,229,255,0.3);
+    flex-shrink: 0;
+  }
+  @media (max-width: 600px) {
+    .hero-icon-big { width: 64px; height: 64px; }
+  }
+
+  /* Weapon modal */
+  .weapon-modal {
+    position: fixed; inset: 0;
+    background: rgba(5,8,16,0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 300;
+    display: none;
+    align-items: flex-start; justify-content: center;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .weapon-modal.active { display: flex; }
+  .weapon-modal-content {
+    background: var(--bg1);
+    border: 1px solid var(--cyan);
+    max-width: 800px; width: 100%;
+    padding: 32px;
+    position: relative;
+    margin: 20px auto;
+  }
+  .weapon-modal-num {
+    font-family: "SF Mono", monospace; font-size: 10px; font-weight: 800;
+    color: var(--cyan); letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .weapon-modal-title {
+    font-size: 22px; font-weight: 700; margin-bottom: 14px;
+  }
+  .weapon-modal-status {
+    display: inline-block;
+    font-family: "SF Mono", monospace; font-size: 10px; font-weight: 700;
+    padding: 3px 8px; letter-spacing: 1px; margin-bottom: 16px;
+  }
+  .weapon-modal-body {
+    font-size: 14px; color: var(--ink); line-height: 1.8;
+    margin-bottom: 20px;
+  }
+  .weapon-modal-body p { margin-bottom: 12px; }
+  .weapon-modal-images {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px; margin: 20px 0;
+  }
+  .weapon-modal-images img {
+    width: 100%; aspect-ratio: 9/19.5; object-fit: cover;
+    border: 1px solid var(--line); cursor: pointer;
+    background: var(--bg2);
+  }
+  .weapon-modal-images img:hover { border-color: var(--cyan); }
+  .weapon-back-btn {
+    background: var(--cyan); color: var(--bg0);
+    border: 0; padding: 12px 24px;
+    font-family: "SF Mono", monospace; font-size: 12px; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 12px;
+  }
+  .weapon-back-btn:hover { box-shadow: 0 0 16px var(--cyan); }
+  .weapon-back-icon { font-size: 16px; }
+  .weapon-modal-close {
+    position: absolute; top: 14px; right: 14px;
+    background: transparent; border: 1px solid var(--line);
+    color: var(--inkDim); padding: 6px 10px;
+    font-family: "SF Mono", monospace; font-size: 11px;
+    cursor: pointer;
+  }
+  .weapon-modal-close:hover { color: var(--ink); border-color: var(--cyan); }
+
+  .weapon-card { cursor: pointer; }
+  .weapon-card .more-hint {
+    display: block; font-family: "SF Mono", monospace; font-size: 9px;
+    color: var(--cyan); letter-spacing: 1.5px; margin-top: 8px;
+    opacity: 0.7;
+  }
+  .weapon-card:hover .more-hint { opacity: 1; }
+
+  .toggle-group { display: flex; gap: 4px; }
+  .toggle-btn {
+    background: transparent; border: 1px solid var(--line); color: var(--inkDim);
+    padding: 5px 12px; font-family: "SF Mono", monospace; font-size: 11px;
+    cursor: pointer; transition: all 0.15s; letter-spacing: 1px;
+  }
+  .toggle-btn:hover { color: var(--ink); border-color: var(--cyan); }
+  .toggle-btn.active { background: var(--cyan); color: var(--bg0); border-color: var(--cyan); font-weight: 700; }
+
+  /* Sections */
+  section {
+    max-width: 1100px; margin: 0 auto;
+    padding: 60px 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  section.hero { padding: 80px 24px 60px; }
+  .section-label {
+    font-family: "SF Mono", monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: 3px; color: var(--cyan);
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .section-label::before { content: ""; width: 24px; height: 2px; background: var(--cyan); }
+  h1 { font-size: 36px; font-weight: 700; line-height: 1.25; margin-bottom: 16px; letter-spacing: -0.5px; }
+  h2 { font-size: 26px; font-weight: 700; line-height: 1.3; margin-bottom: 20px; letter-spacing: -0.3px; }
+  h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+  p { color: var(--ink); margin-bottom: 14px; }
+  .sub { color: var(--inkDim); font-size: 14px; }
+
+  /* Hero */
+  .hero-mission {
+    font-size: 18px; font-weight: 600; line-height: 1.5;
+    color: var(--ink); margin-bottom: 8px;
+  }
+  .hero-mission-en {
+    font-style: italic; font-size: 15px; color: var(--inkDim);
+    margin-bottom: 24px;
+  }
+  .hero-svg-wrap {
+    margin: 30px 0;
+    background: var(--bg1);
+    border: 1px solid var(--line);
+    padding: 20px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-svg-label {
+    position: absolute; top: 12px; left: 16px;
+    font-family: "SF Mono", monospace; font-size: 9px; font-weight: 700;
+    color: var(--cyan); letter-spacing: 2px;
+  }
+  .hero-svg-label::before {
+    content: ""; display: inline-block; width: 8px; height: 8px;
+    background: var(--cyan); border-radius: 50%; margin-right: 6px;
+    animation: pulse 1.5s infinite; vertical-align: middle;
+  }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+  .chip {
+    background: var(--bg1); border: 1px solid var(--cyan);
+    color: var(--cyan); padding: 6px 12px;
+    font-family: "SF Mono", monospace; font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px; margin: 24px 0;
+  }
+  .stat-card {
+    background: var(--bg1); border: 1px solid var(--line);
+    padding: 14px;
+  }
+  .stat-card .label {
+    font-family: "SF Mono", monospace; font-size: 9px; font-weight: 700;
+    color: var(--inkDim); letter-spacing: 2px; margin-bottom: 4px;
+  }
+  .stat-card .value {
+    font-family: "SF Mono", monospace; font-size: 22px; font-weight: 700;
+    color: var(--cyan);
+  }
+  .stat-card .desc { font-size: 11px; color: var(--inkDim); margin-top: 4px; }
+
+  /* Timeline (120-year gap) */
+  .timeline {
+    position: relative; padding: 30px 0;
+    display: flex; gap: 0; flex-wrap: nowrap;
+    overflow-x: auto; padding-bottom: 20px;
+  }
+  .timeline::before {
+    content: ""; position: absolute; top: 50%; left: 0; right: 0;
+    height: 2px; background: var(--line);
+  }
+  .tl-node {
+    flex: 0 0 160px; position: relative; text-align: center; padding: 0 8px;
+  }
+  .tl-dot {
+    width: 14px; height: 14px; background: var(--bg0);
+    border: 2px solid var(--cyan); border-radius: 50%;
+    margin: 0 auto; position: relative; z-index: 2;
+  }
+  .tl-node.now .tl-dot { background: var(--cyan); box-shadow: 0 0 16px var(--cyan); }
+  .tl-year {
+    font-family: "SF Mono", monospace; font-size: 13px; font-weight: 700;
+    color: var(--cyan); margin-top: 8px;
+  }
+  .tl-desc { font-size: 11px; color: var(--inkDim); margin-top: 4px; line-height: 1.4; }
+  .tl-node.now .tl-year { color: var(--cyan); font-size: 14px; }
+  .tl-node.now .tl-desc { color: var(--ink); font-weight: 600; }
+
+  /* Case grid */
+  .case-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px; margin: 24px 0;
+  }
+  .case-card {
+    background: var(--bg1); border: 1px solid var(--line);
+    padding: 18px; border-left: 3px solid var(--violet);
+  }
+  .case-tag {
+    font-family: "SF Mono", monospace; font-size: 10px; font-weight: 700;
+    color: var(--violet); letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .case-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+  .case-compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;
+  }
+  .case-compare .before, .case-compare .after {
+    padding: 8px; background: var(--bg2);
+    border-left: 2px solid var(--inkFaint);
+  }
+  .case-compare .after { border-left-color: var(--cyan); }
+  .case-compare .label-mini {
+    font-family: "SF Mono", monospace; font-size: 9px;
+    color: var(--inkFaint); letter-spacing: 1.5px; margin-bottom: 4px;
+  }
+  .case-compare .after .label-mini { color: var(--cyan); }
+
+  /* 8 weapons grid */
+  .weapons-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px; margin: 24px 0;
+  }
+  .weapon-card {
+    background: var(--bg1); border: 1px solid var(--line);
+    padding: 16px; position: relative;
+    transition: all 0.2s;
+  }
+  .weapon-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+  .weapon-num {
+    position: absolute; top: -8px; left: 12px;
+    background: var(--cyan); color: var(--bg0);
+    font-family: "SF Mono", monospace; font-size: 11px; font-weight: 800;
+    padding: 2px 8px; letter-spacing: 1px;
+  }
+  .weapon-name { font-size: 14px; font-weight: 700; margin: 8px 0 6px; }
+  .weapon-desc { font-size: 12px; color: var(--inkDim); line-height: 1.5; }
+  .weapon-status {
+    margin-top: 10px; display: inline-block;
+    font-family: "SF Mono", monospace; font-size: 9px; font-weight: 700;
+    padding: 2px 6px; letter-spacing: 1px;
+  }
+  .ws-ready { background: var(--green); color: var(--bg0); }
+  .ws-pending { background: var(--bg2); color: var(--inkDim); border: 1px solid var(--line); }
+
+  /* Competitor matrix */
+  .matrix-wrap { overflow-x: auto; margin: 20px 0; }
+  table.matrix {
+    width: 100%; border-collapse: collapse; min-width: 600px;
+    font-size: 12px;
+  }
+  table.matrix th, table.matrix td {
+    padding: 8px 12px; border: 1px solid var(--line);
+    text-align: center;
+  }
+  table.matrix th {
+    background: var(--bg2); color: var(--cyan);
+    font-family: "SF Mono", monospace; font-size: 10px;
+    font-weight: 700; letter-spacing: 1px;
+  }
+  table.matrix td:first-child {
+    text-align: left; font-weight: 600;
+    color: var(--ink); font-size: 12px;
+  }
+  table.matrix .yes { color: var(--green); font-weight: 700; }
+  table.matrix .no { color: var(--inkFaint); }
+  table.matrix .partial { color: var(--amber); }
+  table.matrix .ours { background: rgba(0, 229, 255, 0.06); }
+
+  /* Screenshots gallery */
+  .screen-cat { margin: 30px 0 12px; }
+  .screen-cat-title {
+    font-family: "SF Mono", monospace; font-size: 11px; font-weight: 700;
+    color: var(--cyan); letter-spacing: 2px; margin-bottom: 12px;
+  }
+  .screen-cat-desc { font-size: 13px; color: var(--inkDim); margin-bottom: 14px; }
+  .screen-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .screen-grid img {
+    width: 100%; aspect-ratio: 9/19.5; object-fit: cover;
+    border: 1px solid var(--line); cursor: pointer; transition: all 0.2s;
+    background: var(--bg1);
+  }
+  .screen-grid img:hover { border-color: var(--cyan); transform: scale(1.02); }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+    z-index: 200; display: none; align-items: center; justify-content: center;
+    cursor: pointer; padding: 20px;
+  }
+  .lightbox.active { display: flex; }
+  .lightbox img { max-width: 95%; max-height: 95%; object-fit: contain; }
+
+  /* Principles */
+  .principles {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px; margin: 24px 0;
+  }
+  .principle {
+    background: var(--bg1); border: 1px solid var(--line);
+    padding: 18px; border-top: 3px solid var(--cyan);
+  }
+  .principle-num {
+    font-family: "SF Mono", monospace; font-size: 10px; font-weight: 700;
+    color: var(--cyan); letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .principle-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .principle-desc { font-size: 12px; color: var(--inkDim); line-height: 1.6; }
+
+  /* Tech stack */
+  .tech-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px; margin: 20px 0;
+  }
+  .tech-pill {
+    background: var(--bg1); border: 1px solid var(--line);
+    padding: 12px; text-align: center; font-family: "SF Mono", monospace;
+    font-size: 12px; color: var(--ink);
+  }
+  .tech-pill .label-mini {
+    font-size: 9px; color: var(--inkFaint); letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+
+  /* Dev timeline */
+  .dev-tl {
+    margin: 24px 0; position: relative;
+  }
+  .dev-step {
+    display: grid; grid-template-columns: 80px 16px 1fr;
+    gap: 14px; padding: 10px 0; align-items: flex-start;
+  }
+  .dev-date {
+    font-family: "SF Mono", monospace; font-size: 11px; font-weight: 700;
+    color: var(--cyan); padding-top: 2px;
+  }
+  .dev-marker {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--cyan); margin: 6px 2px 0; box-shadow: 0 0 8px var(--cyan);
+  }
+  .dev-text {
+    font-size: 13px; color: var(--ink);
+  }
+  .dev-text .ver {
+    font-family: "SF Mono", monospace; font-size: 10px; color: var(--violet);
+    background: rgba(167, 139, 250, 0.1); padding: 1px 6px;
+    margin-right: 6px; letter-spacing: 1px;
+  }
+
+  /* Phase roadmap */
+  .phase-row {
+    display: grid; grid-template-columns: 100px 1fr; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .phase-tag {
+    font-family: "SF Mono", monospace; font-size: 11px; font-weight: 700;
+    color: var(--cyan); letter-spacing: 2px;
+  }
+  .phase-desc { font-size: 13px; line-height: 1.6; }
+  .phase-desc .when { color: var(--inkFaint); font-size: 11px; margin-left: 8px; font-family: "SF Mono", monospace; }
+
+  /* Detail mode hide */
+  body.simple-mode .detail-only { display: none !important; }
+
+  /* CTA / Footer */
+  .cta {
+    background: var(--bg1); border: 1px solid var(--cyan);
+    padding: 30px; margin: 40px 0; text-align: center;
+  }
+  .cta-title { font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--cyan); }
+  .cta-text { font-size: 14px; color: var(--ink); margin-bottom: 12px; }
+
+  footer {
+    padding: 30px 20px; text-align: center;
+    font-family: "SF Mono", monospace; font-size: 10px;
+    color: var(--inkFaint); letter-spacing: 1px;
+    border-top: 1px solid var(--line);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    section { padding: 40px 16px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 20px; }
+    .stat-card .value { font-size: 18px; }
+  }
+</style>
+</head>
+<body class="detail-mode">
+
+<!-- Top nav -->
+<nav class="top-nav">
+  <div class="brand">
+    <img src="assets/AppIcon-1024.png" alt="CardioLink" class="brand-icon">
+    CARDIOLINK
+  </div>
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <div class="toggle-group" id="lang-toggle">
+      <button class="toggle-btn active" data-lang="ko">KR</button>
+      <button class="toggle-btn" data-lang="en">EN</button>
+      <button class="toggle-btn" data-lang="ja">JP</button>
+    </div>
+    <div class="toggle-group" id="mode-toggle">
+      <button class="toggle-btn" data-mode="simple" data-i18n="mode_simple">간단</button>
+      <button class="toggle-btn active" data-mode="detail" data-i18n="mode_detail">상세</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="section-label" data-i18n="hero_label">PATIENT DIARY + ECG FUSION PLATFORM</div>
+  <div class="hero-icon-row">
+    <img src="assets/AppIcon-1024.png" alt="CardioLink App Icon" class="hero-icon-big">
+    <div style="flex: 1;">
+      <h1 data-i18n="hero_title" style="margin-bottom: 8px;">의학이 측정해온 120년의 빈자리를 채우다</h1>
+      <div style="font-family: 'SF Mono', monospace; font-size: 11px; color: var(--cyan); letter-spacing: 2px;" data-i18n="hero_subtitle">iOS 18 · POLAR H10 · 한 · 영 · 일</div>
+    </div>
+  </div>
+  <div class="hero-mission" data-i18n="hero_mission">
+    120년간 의학은 심장을 측정해왔다. CardioLink는 심장이 무엇에 반응하는지를 측정한다.
+  </div>
+  <div class="hero-mission-en">
+    For 120 years, medicine measured the heart. CardioLink measures what the heart responds to.
+  </div>
+
+  <!-- Animated ECG SVG -->
+  <div class="hero-svg-wrap">
+    <div class="hero-svg-label">LIVE · ECG · HR · RESP</div>
+    <svg viewBox="0 0 800 160" preserveAspectRatio="none" style="width: 100%; height: 160px; display: block;">
+      <defs>
+        <linearGradient id="grid-fade" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stop-color="rgba(255,77,109,0.15)"/>
+          <stop offset="1" stop-color="rgba(255,77,109,0.05)"/>
+        </linearGradient>
+      </defs>
+      <!-- 5mm grid -->
+      <g stroke="url(#grid-fade)" stroke-width="0.4">
+        <line x1="0" y1="0" x2="800" y2="0"/>
+        <line x1="0" y1="40" x2="800" y2="40"/>
+        <line x1="0" y1="80" x2="800" y2="80"/>
+        <line x1="0" y1="120" x2="800" y2="120"/>
+        <line x1="0" y1="160" x2="800" y2="160"/>
+      </g>
+      <g stroke="rgba(255,77,109,0.1)" stroke-width="0.3">
+        <line x1="50" y1="0" x2="50" y2="160"/>
+        <line x1="100" y1="0" x2="100" y2="160"/>
+        <line x1="150" y1="0" x2="150" y2="160"/>
+        <line x1="200" y1="0" x2="200" y2="160"/>
+        <line x1="250" y1="0" x2="250" y2="160"/>
+        <line x1="300" y1="0" x2="300" y2="160"/>
+        <line x1="350" y1="0" x2="350" y2="160"/>
+        <line x1="400" y1="0" x2="400" y2="160"/>
+        <line x1="450" y1="0" x2="450" y2="160"/>
+        <line x1="500" y1="0" x2="500" y2="160"/>
+        <line x1="550" y1="0" x2="550" y2="160"/>
+        <line x1="600" y1="0" x2="600" y2="160"/>
+        <line x1="650" y1="0" x2="650" y2="160"/>
+        <line x1="700" y1="0" x2="700" y2="160"/>
+        <line x1="750" y1="0" x2="750" y2="160"/>
+      </g>
+      <!-- ECG wave -->
+      <path id="ecg-path"
+        fill="none" stroke="#00e5ff" stroke-width="1.5"
+        d="M 0 80 L 40 80 L 45 78 L 50 80 L 60 80 L 65 70 L 70 100 L 73 30 L 76 130 L 80 80 L 110 80 L 115 76 L 120 80 L 130 80
+           L 140 80 L 145 78 L 150 80 L 160 80 L 165 70 L 170 100 L 173 30 L 176 130 L 180 80 L 210 80 L 215 76 L 220 80 L 230 80
+           L 240 80 L 245 78 L 250 80 L 260 80 L 265 70 L 270 100 L 273 30 L 276 130 L 280 80 L 310 80 L 315 76 L 320 80 L 330 80
+           L 340 80 L 345 78 L 350 80 L 360 80 L 365 70 L 370 100 L 373 30 L 376 130 L 380 80 L 410 80 L 415 76 L 420 80 L 430 80
+           L 440 80 L 445 78 L 450 80 L 460 80 L 465 70 L 470 100 L 473 30 L 476 130 L 480 80 L 510 80 L 515 76 L 520 80 L 530 80
+           L 540 80 L 545 78 L 550 80 L 560 80 L 565 70 L 570 100 L 573 30 L 576 130 L 580 80 L 610 80 L 615 76 L 620 80 L 630 80
+           L 640 80 L 645 78 L 650 80 L 660 80 L 665 70 L 670 100 L 673 30 L 676 130 L 680 80 L 710 80 L 715 76 L 720 80 L 730 80
+           L 740 80 L 745 78 L 750 80 L 760 80 L 765 70 L 770 100 L 773 30 L 776 130 L 780 80 L 800 80"
+        stroke-dasharray="3000"
+        stroke-dashoffset="3000">
+        <animate attributeName="stroke-dashoffset" from="3000" to="0" dur="6s" repeatCount="indefinite"/>
+      </path>
+    </svg>
+  </div>
+
+  <p data-i18n="hero_intro">
+    CardioLink는 단순한 ECG 뷰어가 아니다. <strong>채팅 anchor + 연속 ECG + 환경 컨텍스트</strong>를 융합해, 부정맥·심혈관 환자가 자신의 패턴을 처음으로 객관화할 수 있는 도구를 만든다.
+  </p>
+
+  <div class="chip-row">
+    <div class="chip" data-i18n="chip_polar">Polar H10 130Hz raw ECG</div>
+    <div class="chip" data-i18n="chip_anchor">채팅 anchor 융합</div>
+    <div class="chip" data-i18n="chip_resp">호흡 3-method 앙상블</div>
+    <div class="chip" data-i18n="chip_segment">다일·다주 연속 녹화</div>
+    <div class="chip" data-i18n="chip_local">100% 로컬 우선</div>
+    <div class="chip" data-i18n="chip_ios18">iOS 18 native</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label" data-i18n="stat_dev_label">개발 기간</div>
+      <div class="value" data-i18n="stat_dev_value">20일</div>
+      <div class="desc" data-i18n="stat_dev_desc">04-24 등록 → 05-13 v0.9.1</div>
+    </div>
+    <div class="stat-card">
+      <div class="label" data-i18n="stat_features_label">차별 우위</div>
+      <div class="value" data-i18n="stat_features_value">8개</div>
+      <div class="desc" data-i18n="stat_features_desc">3개 Phase 1β ready</div>
+    </div>
+    <div class="stat-card">
+      <div class="label" data-i18n="stat_sample_label">샘플레이트</div>
+      <div class="value">130Hz</div>
+      <div class="desc" data-i18n="stat_sample_desc">raw ECG, AFib 연구 검증</div>
+    </div>
+    <div class="stat-card">
+      <div class="label" data-i18n="stat_battery_label">H10 배터리</div>
+      <div class="value">10~14일</div>
+      <div class="desc" data-i18n="stat_battery_desc">hybrid 모드 / IP68</div>
+    </div>
+  </div>
+</section>
+
+<!-- 120-YEAR GAP -->
+<section>
+  <div class="section-label">§ 01 · THE 120-YEAR GAP</div>
+  <h2 data-i18n="gap_title">120년의 빈자리</h2>
+  <p data-i18n="gap_intro">
+    심전도 센서의 하드웨어 민주화는 120년에 걸쳐 사실상 완성됐다. 그러나 같은 120년 동안 <strong>"심전도가 왜 그렇게 변했는지"를 측정하는 도구는 단 한 발자국도 발전하지 못했다.</strong>
+  </p>
+
+  <div class="timeline">
+    <div class="tl-node">
+      <div class="tl-dot"></div>
+      <div class="tl-year">1903</div>
+      <div class="tl-desc" data-i18n="tl_1903">Einthoven 줄전류계 — 냉장고 크기</div>
+    </div>
+    <div class="tl-node">
+      <div class="tl-dot"></div>
+      <div class="tl-year">1957</div>
+      <div class="tl-desc" data-i18n="tl_1957">Holter 24시간 — 종이 일지 누락</div>
+    </div>
+    <div class="tl-node">
+      <div class="tl-dot"></div>
+      <div class="tl-year">1980</div>
+      <div class="tl-desc" data-i18n="tl_1980">카세트 Holter — 의료기관 임대</div>
+    </div>
+    <div class="tl-node">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2018</div>
+      <div class="tl-desc" data-i18n="tl_2018">Apple Watch — 30s snapshot</div>
+    </div>
+    <div class="tl-node">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2020</div>
+      <div class="tl-desc" data-i18n="tl_2020">KardiaMobile — 단발 측정</div>
+    </div>
+    <div class="tl-node">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2025</div>
+      <div class="tl-desc" data-i18n="tl_2025">Polar H10 — raw ECG 누구나</div>
+    </div>
+    <div class="tl-node now">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2026</div>
+      <div class="tl-desc" data-i18n="tl_2026">CardioLink — 일기 + ECG 융합</div>
+    </div>
+  </div>
+
+  <p class="detail-only" data-i18n="gap_detail">
+    의학 연구는 1970년대부터 감정·자세·활동·스트레스·수면이 심장 기능에 영향을 미친다는 사실을 알고 있었다. 학술 문헌은 풍부하다. 하지만 이를 개인 환자에게 적용하려면 그 환자의 일상 데이터가 있어야 했고, 그것을 잡을 도구가 없었다. 의사가 환자에게 의지할 수 있던 건 <strong>기억 회상(retrospective recall)</strong>뿐이었다 — 부정확하기로 유명한 방법. <strong>결과</strong>: "의사 ECG에선 정상인데 환자는 계속 답답하다고 호소함" → "괜찮으니 마음 편히 가지세요" → 자신의 경험이 부정당했다고 느낌 → 의료 시스템 불신 → 진단·치료 지연. 이 시나리오를 <strong>전 세계 부정맥·심혈관 환자 수천만 명이 매일 겪는다.</strong> CardioLink가 그 빈자리를 채운다.
+  </p>
+</section>
+
+<!-- PATIENT IMPACT SCENARIOS -->
+<section>
+  <div class="section-label">§ 02 · PATIENT IMPACT</div>
+  <h2 data-i18n="cases_title">환자 임팩트 시나리오 ABCD</h2>
+  <p data-i18n="cases_intro">현재 의료 시스템에서 일상적으로 해결되지 못하는 4개 문제. CardioLink가 정량적·구조적으로 개선한다.</p>
+
+  <div class="case-grid">
+    <div class="case-card">
+      <div class="case-tag">CASE A</div>
+      <div class="case-title" data-i18n="case_a_title">"원인 모를 두근거림"</div>
+      <div class="case-compare">
+        <div class="before">
+          <div class="label-mini" data-i18n="cmp_now">CURRENT</div>
+          <div data-i18n="case_a_before">의사 5번 방문, 매번 ECG 정상 → "스트레스 줄이세요" → 만성 불안</div>
+        </div>
+        <div class="after">
+          <div class="label-mini" data-i18n="cmp_after">WITH CARDIOLINK</div>
+          <div data-i18n="case_a_after">3주 데이터 → "오전 9~10시 카페인+통근 클러스터" → 명확한 패턴</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-card">
+      <div class="case-tag">CASE B</div>
+      <div class="case-title" data-i18n="case_b_title">약 효과 객관화</div>
+      <div class="case-compare">
+        <div class="before">
+          <div class="label-mini" data-i18n="cmp_now">CURRENT</div>
+          <div data-i18n="case_b_before">환자 주관 "좀 나아진 것 같아요" → 의사 추정 진단</div>
+        </div>
+        <div class="after">
+          <div class="label-mini" data-i18n="cmp_after">WITH CARDIOLINK</div>
+          <div data-i18n="case_b_after">약 전후 30일 비교: 두근거림 빈도 -34%, 지속시간 -47%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-card">
+      <div class="case-tag">CASE C</div>
+      <div class="case-title" data-i18n="case_c_title">응급실 triage</div>
+      <div class="case-compare">
+        <div class="before">
+          <div class="label-mini" data-i18n="cmp_now">CURRENT</div>
+          <div data-i18n="case_c_before">환자 의식 약화 + 30분 문진 → 골든 타임 손실</div>
+        </div>
+        <div class="after">
+          <div class="label-mini" data-i18n="cmp_after">WITH CARDIOLINK</div>
+          <div data-i18n="case_c_after">iPhone 보여주기 → 48시간 chat + ECG → 5분 안 판단</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-card">
+      <div class="case-tag">CASE D</div>
+      <div class="case-title" data-i18n="case_d_title">보험·장애 평가</div>
+      <div class="case-compare">
+        <div class="before">
+          <div class="label-mini" data-i18n="cmp_now">CURRENT</div>
+          <div data-i18n="case_d_before">"객관적 증거 부족" → 보장 거절 → 환자 권리 침해</div>
+        </div>
+        <div class="after">
+          <div class="label-mini" data-i18n="cmp_after">WITH CARDIOLINK</div>
+          <div data-i18n="case_d_after">월평균 발작 11.3회, 평균 6분 22초 → 반박 불가 데이터</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 COMPETITIVE WEAPONS -->
+<section>
+  <div class="section-label">§ 03 · 8 WEAPONS</div>
+  <h2 data-i18n="weapons_title">8대 차별 우위</h2>
+  <p data-i18n="weapons_intro">App Store v1.0 시점에 경쟁사 누구도 보유하지 못한 8가지. 이 스택이 "환자 일기 + ECG 융합 플랫폼" 새 카테고리를 정의한다.</p>
+
+  <div class="weapons-grid">
+    <div class="weapon-card" onclick="openWeapon(1)">
+      <div class="weapon-num">01</div>
+      <div class="weapon-name" data-i18n="w1_name">ECG + 환자 일기 anchor 융합</div>
+      <div class="weapon-desc" data-i18n="w1_desc">채팅 entry 시점에 ECG·HR·HRV·호흡·GPS·동작 자동 anchor. 시간축 navigator로 재구성.</div>
+      <div class="weapon-status ws-ready">READY</div>
+      <div class="more-hint" data-i18n="more_hint">자세히 보기 →</div>
+    </div>
+    <div class="weapon-card" onclick="openWeapon(2)">
+      <div class="weapon-num">02</div>
+      <div class="weapon-name" data-i18n="w2_name">STT 음성 채팅 + 다중 미디어</div>
+      <div class="weapon-desc" data-i18n="w2_desc">SFSpeechRecognizer 온디바이스 한·영. 사진·음성·환경 메타 동시 anchor.</div>
+      <div class="weapon-status ws-pending">PENDING</div>
+      <div class="more-hint" data-i18n="more_hint">자세히 보기 →</div>
+    </div>
+    <div class="weapon-card" onclick="openWeapon(3)">
+      <div class="weapon-num">03</div>
+      <div class="weapon-name" data-i18n="w3_name">블랙박스 자동 ring buffer</div>
+      <div class="weapon-desc" data-i18n="w3_desc">±N분 ECG 자동 보존. 채팅 trigger 시 promote → 영구 기록.</div>
+      <div class="weapon-status ws-pending">PENDING</div>
+      <div class="more-hint" data-i18n="more_hint">자세히 보기 →</div>
+    </div>
+    <div class="weapon-card" onclick="openWeapon(4)">
+      <div class="weapon-num">04</div>
+      <div class="weapon-name" data-i18n="w4_name">다일·수주 연속 녹화</div>
+      <div class="weapon-desc" data-i18n="w4_desc">1시간 자동 분할 + 다중 segment. BLE 끊김 자동 복구 + 데이터 보존성 3중 방어.</div>
+      <div class="weapon-status ws-ready">READY</div>
+      <div class="more-hint" data-i18n="more_hint">자세히 보기 →</div>
+    </div>
+    <div class="weapon-card" onclick="openWeapon(5)">
+      <div class="weapon-num">05</div>
+      <div class="weapon-name" data-i18n="w5_name">사용 패턴 학습 → 능동 추천</div>
+      <div class="weapon-desc" data-i18n="w5_desc">사용자 행동 분석 → "이 시간대 두근거림 자주" 능동 제안.</div>
+      <div class="weapon-status ws-pending">PENDING</div>
+      <div class="more-hint" data-i18n="more_hint">자세히 보기 →</div>
+    </div>
+    <div class="weapon-card" onclick="openWeapon(6)">
+      <div class="weapon-num">06</div>
+      <div class="weapon-name" data-i18n="w6_name">익명 연구 기여 미션 브랜딩</div>
+      <div class="weapon-desc" data-i18n="w6_desc">옵트인 익명 데이터 → 학술 기관 공유. 환자가 곧 후원자.</div>
+      <div class="weapon-status ws-pending">PENDING</div>
+      <div class="more-hint" data-i18n="more_hint">자세히 보기 →</div>
+    </div>
+    <div class="weapon-card" onclick="openWeapon(7)">
+      <div class="weapon-num">07</div>
+      <div class="weapon-name" data-i18n="w7_name">호흡 라이브 3-method 앙상블</div>
+      <div class="weapon-desc" data-i18n="w7_desc">ACC bandpass + EDR + RSA. 라이브 + 영구 기록 + navigator 시각화.</div>
+      <div class="weapon-status ws-ready">READY</div>
+      <div class="more-hint" data-i18n="more_hint">자세히 보기 →</div>
+    </div>
+    <div class="weapon-card" onclick="openWeapon(8)">
+      <div class="weapon-num">08</div>
+      <div class="weapon-name" data-i18n="w8_name">임상급 수면 추적</div>
+      <div class="weapon-desc" data-i18n="w8_desc">가슴 ECG + ACC + 호흡 → 임상 PSG 대비 85% 정확도 (Apple Watch ~70%).</div>
+      <div class="weapon-status ws-pending">PENDING</div>
+      <div class="more-hint" data-i18n="more_hint">자세히 보기 →</div>
+    </div>
+  </div>
+
+  <div class="detail-only">
+    <h3 style="margin-top: 30px;" data-i18n="cmp_table_title">경쟁사 비교 매트릭스</h3>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th data-i18n="cmp_feature">차별 우위</th>
+            <th>Apple Watch</th>
+            <th>KardiaMobile</th>
+            <th>Polar Beat</th>
+            <th data-i18n="cmp_holter">Holter (병원)</th>
+            <th class="ours">CardioLink</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td data-i18n="cmp_row1">ECG + 일기 anchor 융합</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="ours yes">✓</td></tr>
+          <tr><td data-i18n="cmp_row2">STT 음성 + 다중 미디어</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="ours yes">✓</td></tr>
+          <tr><td data-i18n="cmp_row3">블랙박스 ring buffer</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="partial">⚠</td><td class="ours yes">✓</td></tr>
+          <tr><td data-i18n="cmp_row4">다일·수주 연속 녹화</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="partial" data-i18n="cmp_holter_only">✓ 의료기관 전용</td><td class="ours yes">✓</td></tr>
+          <tr><td data-i18n="cmp_row5">사용 패턴 학습 추천</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="ours yes">✓</td></tr>
+          <tr><td data-i18n="cmp_row6">익명 연구 기여 미션</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="no">❌</td><td class="ours yes">✓</td></tr>
+          <tr><td data-i18n="cmp_row7">호흡 3-method 앙상블</td><td class="partial" data-i18n="cmp_exercise">⚠ 운동 only</td><td class="no">❌</td><td class="no">❌</td><td class="partial" data-i18n="cmp_psg">⚠ PSG only</td><td class="ours yes">✓</td></tr>
+          <tr><td data-i18n="cmp_row8">임상급 수면 추적</td><td class="partial">⚠ ~70%</td><td class="no">❌</td><td class="partial">⚠ ~75%</td><td class="yes" data-i18n="cmp_hospital">✓ 병원 1박</td><td class="ours yes">✓ ~85%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENSHOTS GALLERY -->
+<section>
+  <div class="section-label">§ 04 · FEATURE SHOWCASE</div>
+  <h2 data-i18n="showcase_title">기능 시연</h2>
+  <p data-i18n="showcase_intro">실제 사용 화면. 다크 베이스 + 시안 액센트 디자인 시스템.</p>
+
+  <div class="screen-cat">
+    <div class="screen-cat-title">▸ <span data-i18n="cat_live">실시간 ECG 모니터링</span></div>
+    <div class="screen-cat-desc" data-i18n="cat_live_desc">130Hz raw ECG + HR/RESP 3패널 카드 + 핀치 줌 (2.5초 ~ 40초 view) + "LIVE" 펄스 인디케이터</div>
+    <div class="screen-grid">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-15.png" alt="Live ECG with zoom">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-10.png" alt="Live ECG READY">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-5.png" alt="Live ECG REC">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-35.png" alt="Live ECG monitoring">
+    </div>
+  </div>
+
+  <div class="screen-cat">
+    <div class="screen-cat-title">▸ <span data-i18n="cat_record">기록 탭 + 시간축 navigator</span></div>
+    <div class="screen-cat-desc" data-i18n="cat_record_desc">정시 단위 자동 분할 + 4 strip 동시 시각화 + cursor 따라 NOW·HR·R-R·RESP 실시간 갱신 + 채팅 anchor 마커 + GO 점프 sub-pixel 정확</div>
+    <div class="screen-grid">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-20.png" alt="Hour navigator">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-25.png" alt="Connecting state">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-21.png" alt="Hour navigator detail">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-22.png" alt="Hour navigator anchor">
+    </div>
+  </div>
+
+  <div class="screen-cat">
+    <div class="screen-cat-title">▸ <span data-i18n="cat_device">디바이스 연결 + 안정성</span></div>
+    <div class="screen-cat-desc" data-i18n="cat_device_desc">Polar H10 페어링 + 자동 재연결 + 배터리 + 신호 강도. 백그라운드 BLE 유지 trick + UIBackgroundTask + AVAudioSession observer 3종.</div>
+    <div class="screen-grid">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-30.png" alt="Device connection">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-31.png" alt="Device list">
+    </div>
+  </div>
+
+  <div class="screen-cat">
+    <div class="screen-cat-title">▸ <span data-i18n="cat_multi">멀티태스킹 + 백그라운드</span></div>
+    <div class="screen-cat-desc" data-i18n="cat_multi_desc">PIP 비디오 시청 + 다른 앱 사용 중에도 ECG 기록 유지. 화면 잠금 상태에서도 BLE 연결 유지.</div>
+    <div class="screen-grid">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-1.png" alt="PIP multitasking">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-50.png" alt="Multitask">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-45.png" alt="Multitask 2">
+    </div>
+  </div>
+
+  <div class="screen-cat detail-only">
+    <div class="screen-cat-title">▸ <span data-i18n="cat_more">전체 캡쳐 (상세)</span></div>
+    <div class="screen-cat-desc" data-i18n="cat_more_desc">개발 과정의 다양한 상태 (READY · CONNECTING · LIVE · PIP · 메모 입력). 클릭하면 확대.</div>
+    <div class="screen-grid" id="all-screens">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- 4 PRINCIPLES -->
+<section>
+  <div class="section-label">§ 05 · OPERATING PRINCIPLES</div>
+  <h2 data-i18n="principles_title">4대 운영 원칙</h2>
+  <p data-i18n="principles_intro">모든 기능·인사·외부 발신 결정은 다음 4가지 원칙에 부합해야 한다.</p>
+
+  <div class="principles">
+    <div class="principle">
+      <div class="principle-num">PRINCIPLE 1</div>
+      <div class="principle-title" data-i18n="p1_title">환자 우선 (Patient-First)</div>
+      <div class="principle-desc" data-i18n="p1_desc">모든 결정의 1차 기준은 "환자의 실질적 리스크를 어떻게 줄이는가". 인허가·시장성·기술 우아함은 부수.</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">PRINCIPLE 2</div>
+      <div class="principle-title" data-i18n="p2_title">진단 회피, 관찰 제공</div>
+      <div class="principle-desc" data-i18n="p2_desc">자동 진단·치료 권고 금지. 그러나 객관 데이터 시각화·통계·anchor는 적극 제공. "관찰됨" 표현.</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">PRINCIPLE 3</div>
+      <div class="principle-title" data-i18n="p3_title">100% 로컬 우선</div>
+      <div class="principle-desc" data-i18n="p3_desc">데이터는 디바이스에. 외부 전송은 사용자 명시 행동에만. 백엔드 서버 영원히 없음.</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">PRINCIPLE 4</div>
+      <div class="principle-title" data-i18n="p4_title">미션 &gt; 기능 &gt; 인허가</div>
+      <div class="principle-desc" data-i18n="p4_desc">인허가는 환자 도달을 위한 도구일 뿐, 미션의 척도가 아니다.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section>
+  <div class="section-label">§ 06 · TECH STACK</div>
+  <h2 data-i18n="tech_title">기술 스택</h2>
+  <p data-i18n="tech_intro">iOS 18 native API + Polar BLE SDK + 자체 신호처리 + Apple 생태계 통합.</p>
+
+  <div class="tech-grid">
+    <div class="tech-pill"><div class="label-mini">HARDWARE</div>Polar H10</div>
+    <div class="tech-pill"><div class="label-mini">PLATFORM</div>iOS 18+</div>
+    <div class="tech-pill"><div class="label-mini">UI</div>SwiftUI</div>
+    <div class="tech-pill"><div class="label-mini">BLE</div>Polar SDK 6.16</div>
+    <div class="tech-pill"><div class="label-mini">MAP</div>MapKit</div>
+    <div class="tech-pill"><div class="label-mini">CHARTS</div>Canvas API</div>
+    <div class="tech-pill"><div class="label-mini">SYNC</div>iCloud Drive</div>
+    <div class="tech-pill"><div class="label-mini">AUTH</div>Apple Sign In</div>
+    <div class="tech-pill"><div class="label-mini">SAFETY NET</div>libp2p (planned)</div>
+    <div class="tech-pill"><div class="label-mini">SIGNAL</div>ACC + EDR + RSA</div>
+    <div class="tech-pill"><div class="label-mini">STORAGE</div>CLE2 v2 format</div>
+    <div class="tech-pill"><div class="label-mini">LOCALE</div>한 · 영 · 일</div>
+  </div>
+
+  <div class="detail-only">
+    <h3 style="margin-top: 30px;" data-i18n="tech_detail_title">기술 깊이 (선택)</h3>
+    <ul style="font-size: 13px; line-height: 1.9; color: var(--inkDim); padding-left: 20px;">
+      <li data-i18n="td1"><strong style="color:var(--ink)">iOS 18 native scroll</strong>: ScrollPosition.scrollTo(x:) + onScrollGeometryChange — sub-pixel 정확 cursor</li>
+      <li data-i18n="td2"><strong style="color:var(--ink)">CLE2 v2 format</strong>: 32B header (magic + version + session start ns + Polar epoch offset + sample rate) + 12B record (UInt64 device ns + Int32 µV)</li>
+      <li data-i18n="td3"><strong style="color:var(--ink)">Clock Anchor</strong>: H10 firmware reset 자동 보정. sample 간격은 H10이, 절대 wall clock은 iPhone이 anchor.</li>
+      <li data-i18n="td4"><strong style="color:var(--ink)">3-method 호흡 앙상블</strong>: ACC bandpass + EDR + RSA. 30s 윈도우 5s cadence. 5초 cadence isReliable 결과만 영구 기록.</li>
+      <li data-i18n="td5"><strong style="color:var(--ink)">백그라운드 BLE 유지</strong>: AVAudioSession.playback + silent audio (0.005 volume) + UIBackgroundTask + 5s watchdog + interruption observer 3종.</li>
+      <li data-i18n="td6"><strong style="color:var(--ink)">데이터 보존성 3중 방어</strong>: 30s autoSaveTimer + didEnterBackground notification + willTerminate notification.</li>
+      <li data-i18n="td7"><strong style="color:var(--ink)">자동 재연결</strong>: 마지막 디바이스 UserDefaults persist + 앱 시작 시 자동 connect + 지수 backoff (60회 시도).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- DEV TIMELINE -->
+<section>
+  <div class="section-label">§ 07 · DEVELOPMENT VELOCITY</div>
+  <h2 data-i18n="dev_title">개발 타임라인 — 20일</h2>
+  <p data-i18n="dev_intro">P27 프로젝트 등록부터 v0.9.1 안정 빌드까지 20일. 8대 차별 우위 중 3개가 Phase 1β v1.0 출시 가능 수준 도달.</p>
+
+  <div class="dev-tl">
+    <div class="dev-step">
+      <div class="dev-date">04-24</div>
+      <div class="dev-marker"></div>
+      <div class="dev-text"><span class="ver">P27</span><span data-i18n="dev_0424">P27 등록 + 종합 리뷰 + 커스텀 HW v4 설계 완성 (Phase 3+ 자산 보관)</span></div>
+    </div>
+    <div class="dev-step">
+      <div class="dev-date">05-11</div>
+      <div class="dev-marker"></div>
+      <div class="dev-text"><span class="ver">v0.1.0</span><span data-i18n="dev_0511a">Polar H10 피벗 결정 + iOS 앱 스캐폴드 + ECG 실측 스트리밍 성공</span></div>
+    </div>
+    <div class="dev-step">
+      <div class="dev-date">05-11</div>
+      <div class="dev-marker"></div>
+      <div class="dev-text"><span class="ver">v0.2.0</span><span data-i18n="dev_0511b">타임스탬프 동기 + 1시간 파일 분할 + multi-segment Export</span></div>
+    </div>
+    <div class="dev-step">
+      <div class="dev-date">05-11</div>
+      <div class="dev-marker"></div>
+      <div class="dev-text"><strong style="color:var(--cyan)" data-i18n="dev_0511c">🌟 미션 정의 + 4대 원칙 + 8대 차별 우위 확정 (3시간 사유)</strong></div>
+    </div>
+    <div class="dev-step">
+      <div class="dev-date">05-12</div>
+      <div class="dev-marker"></div>
+      <div class="dev-text"><span class="ver">v0.8.0</span><span data-i18n="dev_0512a">시간축 navigator 시각화 완성 (anchor + 4 strip + 핀치 줌)</span></div>
+    </div>
+    <div class="dev-step">
+      <div class="dev-date">05-12</div>
+      <div class="dev-marker"></div>
+      <div class="dev-text"><span class="ver">v0.9.0</span><span data-i18n="dev_0512b">iOS 18 deployment + ScrollPosition + iPad 최적화</span></div>
+    </div>
+    <div class="dev-step">
+      <div class="dev-date">05-13</div>
+      <div class="dev-marker"></div>
+      <div class="dev-text"><span class="ver">v0.9.1</span><span data-i18n="dev_0513">GPS anchor + Apple Maps + 자동 재연결 + 백그라운드 강화 + CLAUDE.md 슬림화</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PHASE ROADMAP -->
+<section>
+  <div class="section-label">§ 08 · ROADMAP</div>
+  <h2 data-i18n="roadmap_title">Phase 로드맵</h2>
+
+  <div class="phase-row">
+    <div class="phase-tag">PHASE 1β</div>
+    <div class="phase-desc">
+      <strong data-i18n="ph1b_title">시장 공개 v1.0 (App Store)</strong><span class="when" data-i18n="ph1b_when">2026 Q2~Q3</span>
+      <div style="color: var(--inkDim); font-size: 12px; margin-top: 4px;" data-i18n="ph1b_desc">ECG 라이브+녹화+HRV+Export+채팅 anchor+호흡+GPS+iPad sync. 안전망 비활성, 진단 표현 0.</div>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-tag">PHASE 1α</div>
+    <div class="phase-desc">
+      <strong data-i18n="ph1a_title">본인 안전망 빌드 (TestFlight)</strong><span class="when" data-i18n="ph1a_when">2026 Q3</span>
+      <div style="color: var(--inkDim); font-size: 12px; margin-top: 4px;" data-i18n="ph1a_desc">AFib hybrid 검출 + 지인 2단계 메시지 + 가족 의료동의 + Apple Watch HealthKit 통합.</div>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-tag">PHASE 2</div>
+    <div class="phase-desc">
+      <strong data-i18n="ph2_title">안전망 일반 출시 검토</strong><span class="when" data-i18n="ph2_when">1년+</span>
+      <div style="color: var(--inkDim); font-size: 12px; margin-top: 4px;" data-i18n="ph2_desc">식약처 디지털헬스규제지원과 사전상담 → Apple Watch 낙상감지 선례 기반.</div>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-tag">PHASE 3+</div>
+    <div class="phase-desc">
+      <strong data-i18n="ph3_title">자체 디바이스 + SaMD 인증</strong><span class="when" data-i18n="ph3_when">5~7년</span>
+      <div style="color: var(--inkDim); font-size: 12px; margin-top: 4px;" data-i18n="ph3_desc">보관 커스텀 HW (SCAD·STL·BOM) 재활용. 혁신트랙 + 신의료기술평가 + 보험 등재.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="border-bottom: 0;">
+  <div class="cta">
+    <div class="cta-title" data-i18n="cta_title">외주·협업·투자 제안 환영</div>
+    <div class="cta-text" data-i18n="cta_text">SwiftUI · iOS native · BLE · 신호처리 · 의료 도메인 전문성. 단일 개발자 + AI 협업으로 20일에 Phase 1β 절반 도달.</div>
+    <div class="cta-text mono" style="color: var(--cyan); font-size: 12px; margin-top: 12px;" data-i18n="cta_contact">CONTACT · jyc0289y@gmail.com</div>
+  </div>
+</section>
+
+<footer>
+  <div data-i18n="footer">CardioLink · SeouLink Corp · For fitness and wellness use only · © 2026</div>
+</footer>
+
+<!-- Weapon Detail Modal -->
+<div class="weapon-modal" id="weapon-modal">
+  <div class="weapon-modal-content">
+    <button class="weapon-modal-close" onclick="closeWeapon()" data-i18n="modal_close">ESC</button>
+    <div class="weapon-modal-num" id="wm-num"></div>
+    <div class="weapon-modal-title" id="wm-title"></div>
+    <div class="weapon-modal-status" id="wm-status"></div>
+    <div class="weapon-modal-body" id="wm-body"></div>
+    <div class="weapon-modal-images" id="wm-images"></div>
+    <button class="weapon-back-btn" onclick="closeWeapon()">
+      <span class="weapon-back-icon">←</span>
+      <span data-i18n="modal_back">목록으로 복귀</span>
+    </button>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" alt="">
+</div>
+
+<script>
+// === Weapon detail mapping (images + key) ===
+const weaponData = {
+  1: { images: [20, 21, 22, 24] },         // anchor 융합 — 시간축 navigator + anchor markers
+  2: { images: [] },                        // STT 미구현
+  3: { images: [] },                        // 블랙박스 미구현
+  4: { images: [5, 30, 23, 26] },          // 다일 연속 — 세션 리스트 + 디바이스 + 다양한 녹화 시각
+  5: { images: [] },                        // Smart Rec 미구현
+  6: { images: [] },                        // 익명 연구 미구현
+  7: { images: [15, 10, 27, 28] },         // 호흡 ensemble — RESP brpm 표시
+  8: { images: [] },                        // 수면 미구현
+};
+
+// === i18n data ===
+const i18n = {
+  ko: {
+    mode_simple: "간단", mode_detail: "상세",
+    hero_subtitle: "iOS 18 · POLAR H10 · 한 · 영 · 일",
+    more_hint: "자세히 보기 →",
+    modal_close: "ESC",
+    modal_back: "목록으로 복귀",
+    wm_status_ready: "✓ Phase 1β v1.0 출시 가능",
+    wm_status_pending: "⏳ Phase 1β v1.0 또는 v1.1+ 구현 예정",
+    wd1_title: "ECG + 환자 일기 anchor 융합",
+    wd1_body: "<p>채팅 entry 시점에 그 순간의 <strong>모든 생체·환경 컨텍스트가 자동으로 anchor</strong>됩니다: ECG·HR·R-R·HRV (RMSSD/SDNN)·호흡 BPM·ACC 동작 강도·motion state·GPS 좌표/속도/고도/방향·세션 engine·배터리·환경 dB.</p><p>기록 탭의 <strong>시간축 navigator</strong>에서 모든 anchor가 violet 마커로 표시되며, GO 버튼으로 sub-pixel 정확도로 그 시점 ECG·HR·R-R·RESP 4-strip을 동시 조회 가능. NOW cursor가 viewport 가운데 고정되어 스크롤 시 cursor 위치의 시각·HR·R-R·RESP가 실시간 갱신.</p><p>이 기능이 <strong>'환자 일기 + ECG 융합 플랫폼'이라는 새 카테고리를 정의</strong>합니다. Apple Watch·KardiaMobile·Polar Beat·Holter — 어디에도 없는 첫 통합.</p>",
+    wd2_title: "STT 음성 채팅 + 다중 미디어 첨부",
+    wd2_body: "<p>iOS <code>SFSpeechRecognizer</code> 온디바이스 한·영 음성 인식. 손이 자유롭지 않은 운동 중·운전 중에도 음성으로 anchor 기록.</p><p>사진 첨부 (Standard 2048px JPEG q=0.75), 환경 메타 (소음 dB + ACC motion state, 대화 내용은 즉시 폐기). 음성 원본 보존 토글 (정확도 의심 시 재청취).</p><p>의료 정형 템플릿 8개 chip 내장 (두근거림·흉통·어지러움·호흡곤란·피로·약 복용·운동 시작/종료) + 사용자 즐겨찾기 스니펫 + 태그 자동완성. <strong>Phase 1β v1.0 출시 범위 포함</strong>.</p>",
+    wd3_title: "블랙박스 자동 ring buffer",
+    wd3_body: "<p>녹화 안 해도 직전 <strong>±N분 ECG·HR·ACC를 항상 ring buffer에 보존</strong>. 채팅 anchor 작성 시 또는 패닉 버튼 누르는 순간 ring buffer의 해당 window를 영구 기록으로 promote.</p><p>이로써 환자가 '두근거림 발생!'을 느끼고 채팅을 작성하면, 발생 시점 ±5분의 ECG가 자동 보존 — 사후 분석 가능. 일반 녹화처럼 \"기록 시작 → 발작 → 기록\"의 순서가 아닌 발작이 일어난 뒤 채팅만으로 보존.</p><p>3 Preset Profile (Discrete·Blackbox·Continuous)의 핵심 engine.</p>",
+    wd4_title: "다일·다주 연속 녹화 안정성",
+    wd4_body: "<p>1시간 단위 자동 파일 분할 (CLE2 v2 포맷, 5.6 MB/segment, 24/일 168/주). 다수 segment로 일주일 연속 녹화 + 안정적 export 가능.</p><p><strong>BLE 끊김 자동 복구</strong>: 지수 backoff 60회 재시도 + 마지막 디바이스 UserDefaults persist → 앱 재시작 시 자동 connect. 백그라운드 BLE 유지 — AVAudioSession.playback + silent audio (0.005 volume) + UIBackgroundTask + 5s watchdog + interruption observer 3종.</p><p><strong>데이터 보존성 3중 방어</strong>: 30s autoSaveTimer + didEnterBackground notification + willTerminate notification. 크래시 / 종료 / 강제 kill 어떤 케이스에서도 데이터 손실 0.</p><p>경쟁사 Holter만이 이 수준의 안정성 제공하나 의료기관 전용. <strong>CardioLink는 일반 사용자도 사용 가능</strong>.</p>",
+    wd5_title: "사용 패턴 학습 → 능동 추천",
+    wd5_body: "<p>사용자의 채팅 anchor 패턴·태그 빈도·이벤트 시각을 온디바이스 ML로 분석. <strong>\"이 시간대 두근거림이 자주 발생합니다. 카페인 줄여보시겠어요?\"</strong> 같은 능동 제안.</p><p>의료 진단 절대 X (Principle 2). 사용자가 자기 패턴을 인지할 수 있는 통계·관찰만 제공.</p><p>Phase 1β v1.0에서 데이터 수집만, v1.1+에서 UX 활성 — 충분한 데이터 축적 후.</p>",
+    wd6_title: "익명 연구 기여 미션 브랜딩",
+    wd6_body: "<p>사용자 옵트인 시 익명화된 데이터 (개인 식별 가능한 text/사진/정밀 GPS 제거, 의료 signal·시·도 수준 위치만 유지) → 학술 기관·공공 연구 노드에 공유.</p><p>환자가 단순 사용자가 아닌 <strong>'미래 환자의 후원자'</strong>로 격상. 한 사람의 데이터가 의학 발전에 직접 기여한다는 의식이 retention 강화 + 미션 brand 형성.</p><p>v1.1+ 옵트인 UX 활성. Phase 1β v1.0부터 데이터 모델 분리 가능 구조 설계.</p>",
+    wd7_title: "호흡 라이브 3-method 앙상블",
+    wd7_body: "<p><strong>3가지 독립 신호로 호흡수 추정 후 앙상블</strong>: ① ACC bandpass (가슴 움직임), ② EDR (ECG-Derived Respiration, R-peak amplitude variation), ③ RSA (R-R interval 기반).</p><p>30초 윈도우, 5초 cadence. <code>isReliable</code> 신뢰도 통과한 결과만 RESP JSONL에 영구 기록 (1 KB/min, 1.4 MB/일).</p><p>라이브 카드 + navigator 시각화 + anchor 자동 캡쳐 3-스택. Apple Watch는 운동 모드에서만 호흡 측정, 우리는 24/7 + 임상급 정확도.</p><p>임상 PSG를 제외하면 일반 소비자 디바이스 중 가장 정확한 호흡 측정.</p>",
+    wd8_title: "임상급 수면 추적",
+    wd8_body: "<p>가슴 ECG + ACC + 호흡 3 신호 융합 → <strong>임상 PSG 대비 약 85% 정확도</strong> (Apple Watch 손목 PPG ~70%, Oura ring ~80%). 가슴 위치의 신호 품질 + 호흡 데이터가 최대 강점.</p><p>Sleep stage 분류 (Light/Deep/REM/Wake)는 Cole-Kripke 변형 + HR drop 패턴 + 호흡 cycle 분석. 임상 PSG 검증 논문 다수.</p><p>v1.0 출시 시점에는 Sleep/Wake 기초 감지만, v1.1+에서 stage 분류 활성.</p>",
+    hero_label: "환자 일기 + ECG 융합 플랫폼",
+    hero_title: "의학이 측정해온 120년의 빈자리를 채우다",
+    hero_mission: "120년간 의학은 심장을 측정해왔다. CardioLink는 심장이 무엇에 반응하는지를 측정한다.",
+    hero_intro: "CardioLink는 단순한 ECG 뷰어가 아니다. <strong>채팅 anchor + 연속 ECG + 환경 컨텍스트</strong>를 융합해, 부정맥·심혈관 환자가 자신의 패턴을 처음으로 객관화할 수 있는 도구를 만든다.",
+    chip_polar: "Polar H10 130Hz raw ECG",
+    chip_anchor: "채팅 anchor 융합",
+    chip_resp: "호흡 3-method 앙상블",
+    chip_segment: "다일·다주 연속 녹화",
+    chip_local: "100% 로컬 우선",
+    chip_ios18: "iOS 18 native",
+    stat_dev_label: "개발 기간", stat_dev_value: "20일", stat_dev_desc: "04-24 등록 → 05-13 v0.9.1",
+    stat_features_label: "차별 우위", stat_features_value: "8개", stat_features_desc: "3개 Phase 1β ready",
+    stat_sample_desc: "raw ECG, AFib 연구 검증",
+    stat_battery_label: "H10 배터리", stat_battery_desc: "hybrid 모드 / IP68",
+    gap_title: "120년의 빈자리",
+    gap_intro: "심전도 센서의 하드웨어 민주화는 120년에 걸쳐 사실상 완성됐다. 그러나 같은 120년 동안 <strong>\"심전도가 왜 그렇게 변했는지\"를 측정하는 도구는 단 한 발자국도 발전하지 못했다.</strong>",
+    tl_1903: "Einthoven 줄전류계 — 냉장고 크기",
+    tl_1957: "Holter 24시간 — 종이 일지 누락",
+    tl_1980: "카세트 Holter — 의료기관 임대",
+    tl_2018: "Apple Watch — 30s snapshot",
+    tl_2020: "KardiaMobile — 단발 측정",
+    tl_2025: "Polar H10 — raw ECG 누구나",
+    tl_2026: "CardioLink — 일기 + ECG 융합",
+    gap_detail: "의학 연구는 1970년대부터 감정·자세·활동·스트레스·수면이 심장 기능에 영향을 미친다는 사실을 알고 있었다. 학술 문헌은 풍부하다. 하지만 이를 개인 환자에게 적용하려면 그 환자의 일상 데이터가 있어야 했고, 그것을 잡을 도구가 없었다. 의사가 환자에게 의지할 수 있던 건 <strong>기억 회상(retrospective recall)</strong>뿐이었다 — 부정확하기로 유명한 방법. <strong>결과</strong>: \"의사 ECG에선 정상인데 환자는 계속 답답하다고 호소함\" → \"괜찮으니 마음 편히 가지세요\" → 자신의 경험이 부정당했다고 느낌 → 의료 시스템 불신 → 진단·치료 지연. 이 시나리오를 <strong>전 세계 부정맥·심혈관 환자 수천만 명이 매일 겪는다.</strong> CardioLink가 그 빈자리를 채운다.",
+    cases_title: "환자 임팩트 시나리오 ABCD",
+    cases_intro: "현재 의료 시스템에서 일상적으로 해결되지 못하는 4개 문제. CardioLink가 정량적·구조적으로 개선한다.",
+    cmp_now: "CURRENT", cmp_after: "WITH CARDIOLINK",
+    case_a_title: "\"원인 모를 두근거림\"",
+    case_a_before: "의사 5번 방문, 매번 ECG 정상 → \"스트레스 줄이세요\" → 만성 불안",
+    case_a_after: "3주 데이터 → \"오전 9~10시 카페인+통근 클러스터\" → 명확한 패턴",
+    case_b_title: "약 효과 객관화",
+    case_b_before: "환자 주관 \"좀 나아진 것 같아요\" → 의사 추정 진단",
+    case_b_after: "약 전후 30일 비교: 두근거림 빈도 -34%, 지속시간 -47%",
+    case_c_title: "응급실 triage",
+    case_c_before: "환자 의식 약화 + 30분 문진 → 골든 타임 손실",
+    case_c_after: "iPhone 보여주기 → 48시간 chat + ECG → 5분 안 판단",
+    case_d_title: "보험·장애 평가",
+    case_d_before: "\"객관적 증거 부족\" → 보장 거절 → 환자 권리 침해",
+    case_d_after: "월평균 발작 11.3회, 평균 6분 22초 → 반박 불가 데이터",
+    weapons_title: "8대 차별 우위",
+    weapons_intro: "App Store v1.0 시점에 경쟁사 누구도 보유하지 못한 8가지. 이 스택이 \"환자 일기 + ECG 융합 플랫폼\" 새 카테고리를 정의한다.",
+    w1_name: "ECG + 환자 일기 anchor 융합",
+    w1_desc: "채팅 entry 시점에 ECG·HR·HRV·호흡·GPS·동작 자동 anchor. 시간축 navigator로 재구성.",
+    w2_name: "STT 음성 채팅 + 다중 미디어",
+    w2_desc: "SFSpeechRecognizer 온디바이스 한·영. 사진·음성·환경 메타 동시 anchor.",
+    w3_name: "블랙박스 자동 ring buffer",
+    w3_desc: "±N분 ECG 자동 보존. 채팅 trigger 시 promote → 영구 기록.",
+    w4_name: "다일·수주 연속 녹화",
+    w4_desc: "1시간 자동 분할 + 다중 segment. BLE 끊김 자동 복구 + 데이터 보존성 3중 방어.",
+    w5_name: "사용 패턴 학습 → 능동 추천",
+    w5_desc: "사용자 행동 분석 → \"이 시간대 두근거림 자주\" 능동 제안.",
+    w6_name: "익명 연구 기여 미션 브랜딩",
+    w6_desc: "옵트인 익명 데이터 → 학술 기관 공유. 환자가 곧 후원자.",
+    w7_name: "호흡 라이브 3-method 앙상블",
+    w7_desc: "ACC bandpass + EDR + RSA. 라이브 + 영구 기록 + navigator 시각화.",
+    w8_name: "임상급 수면 추적",
+    w8_desc: "가슴 ECG + ACC + 호흡 → 임상 PSG 대비 85% 정확도 (Apple Watch ~70%).",
+    cmp_table_title: "경쟁사 비교 매트릭스",
+    cmp_feature: "차별 우위", cmp_holter: "Holter (병원)",
+    cmp_row1: "ECG + 일기 anchor 융합", cmp_row2: "STT 음성 + 다중 미디어",
+    cmp_row3: "블랙박스 ring buffer", cmp_row4: "다일·수주 연속 녹화",
+    cmp_row5: "사용 패턴 학습 추천", cmp_row6: "익명 연구 기여 미션",
+    cmp_row7: "호흡 3-method 앙상블", cmp_row8: "임상급 수면 추적",
+    cmp_holter_only: "✓ 의료기관 전용", cmp_exercise: "⚠ 운동 only",
+    cmp_psg: "⚠ PSG only", cmp_hospital: "✓ 병원 1박",
+    showcase_title: "기능 시연",
+    showcase_intro: "실제 사용 화면. 다크 베이스 + 시안 액센트 디자인 시스템.",
+    cat_live: "실시간 ECG 모니터링",
+    cat_live_desc: "130Hz raw ECG + HR/RESP 3패널 카드 + 핀치 줌 (2.5초 ~ 40초 view) + \"LIVE\" 펄스 인디케이터",
+    cat_record: "기록 탭 + 시간축 navigator",
+    cat_record_desc: "정시 단위 자동 분할 + 4 strip 동시 시각화 + cursor 따라 NOW·HR·R-R·RESP 실시간 갱신 + 채팅 anchor 마커 + GO 점프 sub-pixel 정확",
+    cat_device: "디바이스 연결 + 안정성",
+    cat_device_desc: "Polar H10 페어링 + 자동 재연결 + 배터리 + 신호 강도. 백그라운드 BLE 유지 trick + UIBackgroundTask + AVAudioSession observer 3종.",
+    cat_multi: "멀티태스킹 + 백그라운드",
+    cat_multi_desc: "PIP 비디오 시청 + 다른 앱 사용 중에도 ECG 기록 유지. 화면 잠금 상태에서도 BLE 연결 유지.",
+    cat_more: "전체 캡쳐 (상세)",
+    cat_more_desc: "개발 과정의 다양한 상태 (READY · CONNECTING · LIVE · PIP · 메모 입력). 클릭하면 확대.",
+    principles_title: "4대 운영 원칙",
+    principles_intro: "모든 기능·인사·외부 발신 결정은 다음 4가지 원칙에 부합해야 한다.",
+    p1_title: "환자 우선 (Patient-First)",
+    p1_desc: "모든 결정의 1차 기준은 \"환자의 실질적 리스크를 어떻게 줄이는가\". 인허가·시장성·기술 우아함은 부수.",
+    p2_title: "진단 회피, 관찰 제공",
+    p2_desc: "자동 진단·치료 권고 금지. 그러나 객관 데이터 시각화·통계·anchor는 적극 제공. \"관찰됨\" 표현.",
+    p3_title: "100% 로컬 우선",
+    p3_desc: "데이터는 디바이스에. 외부 전송은 사용자 명시 행동에만. 백엔드 서버 영원히 없음.",
+    p4_title: "미션 > 기능 > 인허가",
+    p4_desc: "인허가는 환자 도달을 위한 도구일 뿐, 미션의 척도가 아니다.",
+    tech_title: "기술 스택",
+    tech_intro: "iOS 18 native API + Polar BLE SDK + 자체 신호처리 + Apple 생태계 통합.",
+    tech_detail_title: "기술 깊이 (선택)",
+    td1: "<strong style=\"color:var(--ink)\">iOS 18 native scroll</strong>: ScrollPosition.scrollTo(x:) + onScrollGeometryChange — sub-pixel 정확 cursor",
+    td2: "<strong style=\"color:var(--ink)\">CLE2 v2 format</strong>: 32B header (magic + version + session start ns + Polar epoch offset + sample rate) + 12B record (UInt64 device ns + Int32 µV)",
+    td3: "<strong style=\"color:var(--ink)\">Clock Anchor</strong>: H10 firmware reset 자동 보정. sample 간격은 H10이, 절대 wall clock은 iPhone이 anchor.",
+    td4: "<strong style=\"color:var(--ink)\">3-method 호흡 앙상블</strong>: ACC bandpass + EDR + RSA. 30s 윈도우 5s cadence. 5초 cadence isReliable 결과만 영구 기록.",
+    td5: "<strong style=\"color:var(--ink)\">백그라운드 BLE 유지</strong>: AVAudioSession.playback + silent audio (0.005 volume) + UIBackgroundTask + 5s watchdog + interruption observer 3종.",
+    td6: "<strong style=\"color:var(--ink)\">데이터 보존성 3중 방어</strong>: 30s autoSaveTimer + didEnterBackground notification + willTerminate notification.",
+    td7: "<strong style=\"color:var(--ink)\">자동 재연결</strong>: 마지막 디바이스 UserDefaults persist + 앱 시작 시 자동 connect + 지수 backoff (60회 시도).",
+    dev_title: "개발 타임라인 — 20일",
+    dev_intro: "P27 프로젝트 등록부터 v0.9.1 안정 빌드까지 20일. 8대 차별 우위 중 3개가 Phase 1β v1.0 출시 가능 수준 도달.",
+    dev_0424: "P27 등록 + 종합 리뷰 + 커스텀 HW v4 설계 완성 (Phase 3+ 자산 보관)",
+    dev_0511a: "Polar H10 피벗 결정 + iOS 앱 스캐폴드 + ECG 실측 스트리밍 성공",
+    dev_0511b: "타임스탬프 동기 + 1시간 파일 분할 + multi-segment Export",
+    dev_0511c: "🌟 미션 정의 + 4대 원칙 + 8대 차별 우위 확정 (3시간 사유)",
+    dev_0512a: "시간축 navigator 시각화 완성 (anchor + 4 strip + 핀치 줌)",
+    dev_0512b: "iOS 18 deployment + ScrollPosition + iPad 최적화",
+    dev_0513: "GPS anchor + Apple Maps + 자동 재연결 + 백그라운드 강화 + CLAUDE.md 슬림화",
+    roadmap_title: "Phase 로드맵",
+    ph1b_title: "시장 공개 v1.0 (App Store)", ph1b_when: "2026 Q2~Q3",
+    ph1b_desc: "ECG 라이브+녹화+HRV+Export+채팅 anchor+호흡+GPS+iPad sync. 안전망 비활성, 진단 표현 0.",
+    ph1a_title: "본인 안전망 빌드 (TestFlight)", ph1a_when: "2026 Q3",
+    ph1a_desc: "AFib hybrid 검출 + 지인 2단계 메시지 + 가족 의료동의 + Apple Watch HealthKit 통합.",
+    ph2_title: "안전망 일반 출시 검토", ph2_when: "1년+",
+    ph2_desc: "식약처 디지털헬스규제지원과 사전상담 → Apple Watch 낙상감지 선례 기반.",
+    ph3_title: "자체 디바이스 + SaMD 인증", ph3_when: "5~7년",
+    ph3_desc: "보관 커스텀 HW (SCAD·STL·BOM) 재활용. 혁신트랙 + 신의료기술평가 + 보험 등재.",
+    cta_title: "외주·협업·투자 제안 환영",
+    cta_text: "SwiftUI · iOS native · BLE · 신호처리 · 의료 도메인 전문성. 단일 개발자 + AI 협업으로 20일에 Phase 1β 절반 도달.",
+    cta_contact: "CONTACT · jyc0289y@gmail.com",
+    footer: "CardioLink · SeouLink Corp · For fitness and wellness use only · © 2026",
+  },
+  en: {
+    mode_simple: "Simple", mode_detail: "Detail",
+    hero_subtitle: "iOS 18 · POLAR H10 · KR · EN · JP",
+    more_hint: "Learn more →",
+    modal_close: "ESC",
+    modal_back: "Back to list",
+    wm_status_ready: "✓ Phase 1β v1.0 release-ready",
+    wm_status_pending: "⏳ Coming in Phase 1β v1.0 or v1.1+",
+    wd1_title: "ECG + Patient Diary Anchor Fusion",
+    wd1_body: "<p>At every chat entry, <strong>all bio + environmental context is auto-anchored</strong>: ECG·HR·R-R·HRV (RMSSD/SDNN)·resp BPM·ACC magnitude·motion state·GPS lat/lng/altitude/speed/course·session engine·battery·ambient dB.</p><p>The Records tab's <strong>time-axis navigator</strong> shows every anchor as a violet marker. GO button jumps to that moment with sub-pixel precision, showing ECG·HR·R-R·RESP 4-strip simultaneously. NOW cursor stays fixed at viewport center; scrolling updates the time, HR, R-R, RESP at cursor position in real time.</p><p>This is what <strong>defines the new category 'Patient Diary + ECG Fusion Platform'</strong>. No competitor (Apple Watch, KardiaMobile, Polar Beat, Holter) integrates these.</p>",
+    wd2_title: "STT Voice Chat + Multimedia Attachment",
+    wd2_body: "<p>iOS <code>SFSpeechRecognizer</code> on-device KR/EN voice recognition. Hands-free anchor while exercising or driving.</p><p>Photo attachment (Standard 2048px JPEG q=0.75), environmental meta (noise dB + ACC motion state, conversation content immediately discarded). Voice original preservation toggle.</p><p>8 built-in medical templates (palpitation/chest pain/dizziness/dyspnea/fatigue/medication/exercise start/end) + user favorites + tag auto-complete. <strong>Included in Phase 1β v1.0</strong>.</p>",
+    wd3_title: "Blackbox Auto Ring Buffer",
+    wd3_body: "<p>Even without recording, <strong>the last ±N minutes of ECG/HR/ACC are always preserved in a ring buffer</strong>. The moment a chat anchor or panic button fires, that window is promoted to permanent storage.</p><p>So when a patient feels palpitations and writes a chat, the ±5 min ECG around that moment is auto-preserved — no need for the patient to remember to start recording first.</p><p>Core engine of the 3 Preset Profile (Discrete/Blackbox/Continuous).</p>",
+    wd4_title: "Multi-day Continuous Recording Reliability",
+    wd4_body: "<p>1-hour auto file split (CLE2 v2 format, 5.6 MB/segment, 24/day, 168/week). Multi-segment continuous recording supports week-long sessions with stable export.</p><p><strong>BLE drop auto-recovery</strong>: exponential backoff 60 retries + last device persisted in UserDefaults → auto-connect on app launch. Background BLE keep-alive: AVAudioSession.playback + silent audio (0.005 volume) + UIBackgroundTask + 5s watchdog + 3 interruption observers.</p><p><strong>3-layer data preservation</strong>: 30s autoSaveTimer + didEnterBackground notification + willTerminate notification. Zero data loss across crash/terminate/force-kill scenarios.</p><p>Holter offers this reliability but only in clinical settings. <strong>CardioLink brings it to consumers</strong>.</p>",
+    wd5_title: "Usage Pattern Learning → Proactive Suggestions",
+    wd5_body: "<p>On-device ML analyzes chat anchor patterns, tag frequency, event timing. Proactive suggestions like <strong>\"Palpitations are frequent in this time window. Consider reducing caffeine.\"</strong></p><p>Never medical diagnosis (Principle 2). Provides only statistics/observations so patients can recognize their own patterns.</p><p>v1.0 collects data; v1.1+ activates the proactive UX after enough accumulation.</p>",
+    wd6_title: "Anonymous Research Contribution Branding",
+    wd6_body: "<p>On opt-in, anonymized data (PII removed: text/photos/precise GPS; medical signal + city-level location retained) is shared with academic / public research nodes.</p><p>The patient becomes not just a user but a <strong>'sponsor of future patients'</strong>. The awareness that their data directly advances medicine strengthens retention and creates mission brand identity.</p><p>Opt-in UX activates in v1.1+. Phase 1β v1.0 designs the separable data model.</p>",
+    wd7_title: "Live Respiration 3-method Ensemble",
+    wd7_body: "<p><strong>Three independent signals estimated and ensembled</strong>: (1) ACC bandpass (chest motion), (2) EDR (ECG-Derived Respiration via R-peak amplitude variation), (3) RSA (R-R interval analysis).</p><p>30s window, 5s cadence. Only <code>isReliable</code> results persisted to RESP JSONL (1 KB/min, 1.4 MB/day).</p><p>Live card + navigator viz + auto-anchor 3-stack. Apple Watch measures respiration only in exercise mode; we provide 24/7 with clinical-grade accuracy.</p><p>Most accurate respiration measurement on consumer devices outside clinical PSG.</p>",
+    wd8_title: "Clinical-Grade Sleep Tracking",
+    wd8_body: "<p>Chest ECG + ACC + respiration 3-signal fusion → <strong>~85% accuracy vs clinical PSG</strong> (Apple Watch wrist PPG ~70%, Oura ring ~80%). Chest position signal quality + respiration data are key strengths.</p><p>Sleep stage classification (Light/Deep/REM/Wake) via Cole-Kripke variant + HR drop + respiration cycle analysis. Validated in multiple clinical PSG papers.</p><p>v1.0 ships basic Sleep/Wake; v1.1+ activates stage classification.</p>",
+    hero_label: "PATIENT DIARY + ECG FUSION PLATFORM",
+    hero_title: "Filling the 120-year gap medicine left behind",
+    hero_mission: "For 120 years, medicine measured the heart. CardioLink measures what the heart responds to.",
+    hero_intro: "CardioLink isn't just an ECG viewer. It fuses <strong>chat anchor + continuous ECG + environmental context</strong> so arrhythmia and cardiovascular patients can objectify their patterns for the first time.",
+    chip_polar: "Polar H10 130Hz raw ECG",
+    chip_anchor: "Chat anchor fusion",
+    chip_resp: "Respiration 3-method ensemble",
+    chip_segment: "Multi-day continuous recording",
+    chip_local: "100% Local-First",
+    chip_ios18: "iOS 18 native",
+    stat_dev_label: "DEV PERIOD", stat_dev_value: "20 days", stat_dev_desc: "04-24 → 05-13 v0.9.1",
+    stat_features_label: "WEAPONS", stat_features_value: "8", stat_features_desc: "3 Phase 1β ready",
+    stat_sample_label: "SAMPLE RATE", stat_sample_desc: "raw ECG, AFib research-grade",
+    stat_battery_label: "H10 BATTERY", stat_battery_desc: "hybrid mode / IP68",
+    gap_title: "The 120-year gap",
+    gap_intro: "ECG sensor hardware democratization is essentially complete after 120 years. But during those same 120 years, <strong>tools that measure 'why the ECG changed that way' did not advance a single step.</strong>",
+    tl_1903: "Einthoven string galvanometer — fridge-sized",
+    tl_1957: "Holter 24h — paper diary omissions",
+    tl_1980: "Cassette Holter — clinic rental",
+    tl_2018: "Apple Watch — 30s snapshot",
+    tl_2020: "KardiaMobile — single measurement",
+    tl_2025: "Polar H10 — raw ECG for everyone",
+    tl_2026: "CardioLink — diary + ECG fusion",
+    gap_detail: "Medical research has known since the 1970s that emotion, posture, activity, stress, and sleep affect cardiac function. Academic literature is abundant. But applying it to individual patients required their daily-life data, and no tool could capture it. Doctors had only <strong>retrospective recall</strong> — notoriously inaccurate. <strong>Result</strong>: \"ECG is normal but patient keeps complaining\" → \"You're fine, just relax\" → patient feels invalidated → distrusts healthcare → delayed diagnosis. <strong>Millions of arrhythmia and cardiovascular patients worldwide experience this every day.</strong> CardioLink fills the gap.",
+    cases_title: "Patient Impact Scenarios ABCD",
+    cases_intro: "Four problems unsolvable in current healthcare. CardioLink improves them quantitatively and structurally.",
+    cmp_now: "CURRENT", cmp_after: "WITH CARDIOLINK",
+    case_a_title: "\"Unexplained palpitations\"",
+    case_a_before: "5 doctor visits, ECG always normal → \"reduce stress\" → chronic anxiety",
+    case_a_after: "3-week data → \"9~10am caffeine+commute cluster\" → clear pattern",
+    case_b_title: "Drug efficacy objectified",
+    case_b_before: "Patient subjective \"feels a bit better\" → doctor speculates",
+    case_b_after: "30-day before/after: palpitations -34%, duration -47%",
+    case_c_title: "ER triage",
+    case_c_before: "Conscious decline + 30min interview → golden time lost",
+    case_c_after: "Show iPhone → 48h chat + ECG → decision in 5 min",
+    case_d_title: "Insurance/disability eval",
+    case_d_before: "\"Insufficient objective evidence\" → denied → patient rights violation",
+    case_d_after: "Avg 11.3 episodes/month, 6m22s avg duration → undeniable data",
+    weapons_title: "8 Competitive Weapons",
+    weapons_intro: "Eight features no competitor has at App Store v1.0 launch. This stack defines a new category: 'Patient Diary + ECG Fusion Platform'.",
+    w1_name: "ECG + patient diary anchor fusion",
+    w1_desc: "Auto-anchor ECG·HR·HRV·resp·GPS·motion at chat entry. Reconstruct via time-axis navigator.",
+    w2_name: "STT voice chat + multimedia",
+    w2_desc: "On-device SFSpeechRecognizer KR/EN. Photo·voice·env meta simultaneous anchor.",
+    w3_name: "Blackbox auto ring buffer",
+    w3_desc: "±N min ECG auto-preserved. Promote to permanent on chat trigger.",
+    w4_name: "Multi-day continuous recording",
+    w4_desc: "1h auto-split + multi-segment. BLE drop auto-recovery + 3-layer data preservation.",
+    w5_name: "Usage pattern learning → proactive suggestions",
+    w5_desc: "Analyze user behavior → \"palpitations frequent at this hour\" proactive suggest.",
+    w6_name: "Anonymous research contribution branding",
+    w6_desc: "Opt-in anonymized data → academic sharing. Patient becomes future patients' sponsor.",
+    w7_name: "Live respiration 3-method ensemble",
+    w7_desc: "ACC bandpass + EDR + RSA. Live + permanent + navigator visualization.",
+    w8_name: "Clinical-grade sleep tracking",
+    w8_desc: "Chest ECG + ACC + respiration → 85% vs clinical PSG (Apple Watch ~70%).",
+    cmp_table_title: "Competitor Comparison Matrix",
+    cmp_feature: "Weapon", cmp_holter: "Holter (hospital)",
+    cmp_row1: "ECG + diary anchor fusion", cmp_row2: "STT voice + multimedia",
+    cmp_row3: "Blackbox ring buffer", cmp_row4: "Multi-day continuous recording",
+    cmp_row5: "Pattern learning suggestions", cmp_row6: "Anonymous research mission",
+    cmp_row7: "Respiration 3-method ensemble", cmp_row8: "Clinical-grade sleep tracking",
+    cmp_holter_only: "✓ medical only", cmp_exercise: "⚠ exercise only",
+    cmp_psg: "⚠ PSG only", cmp_hospital: "✓ 1 hospital night",
+    showcase_title: "Feature Showcase",
+    showcase_intro: "Actual screens. Dark base + cyan accent design system.",
+    cat_live: "Real-time ECG monitoring",
+    cat_live_desc: "130Hz raw ECG + HR/RESP 3-panel cards + pinch zoom (2.5s ~ 40s view) + \"LIVE\" pulse indicator",
+    cat_record: "Records tab + time-axis navigator",
+    cat_record_desc: "Hour-bounded auto-split + 4-strip simultaneous visualization + cursor-following NOW·HR·R-R·RESP live update + chat anchor markers + sub-pixel GO jump",
+    cat_device: "Device connection + reliability",
+    cat_device_desc: "Polar H10 pairing + auto-reconnect + battery + RSSI. Background BLE keep + UIBackgroundTask + 3 AVAudioSession observers.",
+    cat_multi: "Multitasking + background",
+    cat_multi_desc: "ECG recording continues during PIP video + other apps. BLE connection maintained even on locked screen.",
+    cat_more: "All captures (detail)",
+    cat_more_desc: "Various states during development (READY · CONNECTING · LIVE · PIP · memo input). Click to enlarge.",
+    principles_title: "4 Operating Principles",
+    principles_intro: "All feature, HR, and external communication decisions must align with these 4 principles.",
+    p1_title: "Patient-First",
+    p1_desc: "The primary criterion is \"how does this reduce patient real-world risk\". Regulation, marketability, technical elegance are secondary.",
+    p2_title: "Avoid Diagnosis, Provide Observation",
+    p2_desc: "No auto-diagnosis or treatment recommendations. But objective data viz, statistics, anchors are actively provided. Phrasing: \"observed\".",
+    p3_title: "100% Local-First",
+    p3_desc: "Data stays on device. External transmission only on explicit user action. No backend server ever.",
+    p4_title: "Mission > Features > Compliance",
+    p4_desc: "Regulation is a tool for patient reach, not a measure of the mission.",
+    tech_title: "Tech Stack",
+    tech_intro: "iOS 18 native APIs + Polar BLE SDK + custom signal processing + Apple ecosystem integration.",
+    tech_detail_title: "Technical Depth (optional)",
+    td1: "<strong style=\"color:var(--ink)\">iOS 18 native scroll</strong>: ScrollPosition.scrollTo(x:) + onScrollGeometryChange — sub-pixel accurate cursor",
+    td2: "<strong style=\"color:var(--ink)\">CLE2 v2 format</strong>: 32B header (magic + version + session start ns + Polar epoch offset + sample rate) + 12B record (UInt64 device ns + Int32 µV)",
+    td3: "<strong style=\"color:var(--ink)\">Clock Anchor</strong>: Auto-correct H10 firmware resets. H10 owns sample spacing, iPhone owns absolute wall clock.",
+    td4: "<strong style=\"color:var(--ink)\">3-method respiration ensemble</strong>: ACC bandpass + EDR + RSA. 30s window, 5s cadence. Only isReliable results persisted.",
+    td5: "<strong style=\"color:var(--ink)\">Background BLE keep-alive</strong>: AVAudioSession.playback + silent audio (0.005 volume) + UIBackgroundTask + 5s watchdog + 3 interruption observers.",
+    td6: "<strong style=\"color:var(--ink)\">3-layer data preservation</strong>: 30s autoSaveTimer + didEnterBackground notification + willTerminate notification.",
+    td7: "<strong style=\"color:var(--ink)\">Auto-reconnect</strong>: Last device persisted in UserDefaults + auto-connect on launch + exponential backoff (60 attempts).",
+    dev_title: "Development Timeline — 20 days",
+    dev_intro: "From P27 registration to v0.9.1 stable in 20 days. 3 of 8 weapons reached Phase 1β v1.0 release-ready.",
+    dev_0424: "P27 registration + comprehensive review + custom HW v4 design (preserved for Phase 3+)",
+    dev_0511a: "Polar H10 pivot + iOS app scaffold + first real ECG streaming",
+    dev_0511b: "Timestamp sync + 1h file split + multi-segment Export",
+    dev_0511c: "🌟 Mission defined + 4 principles + 8 weapons confirmed (3h reflection)",
+    dev_0512a: "Time-axis navigator viz complete (anchor + 4 strip + pinch zoom)",
+    dev_0512b: "iOS 18 deployment + ScrollPosition + iPad optimization",
+    dev_0513: "GPS anchor + Apple Maps + auto-reconnect + background hardening + CLAUDE.md slimdown",
+    roadmap_title: "Phase Roadmap",
+    ph1b_title: "Public Launch v1.0 (App Store)", ph1b_when: "2026 Q2~Q3",
+    ph1b_desc: "ECG live + record + HRV + Export + chat anchor + resp + GPS + iPad sync. Safety net inactive, 0 diagnostic phrasing.",
+    ph1a_title: "Personal Safety Net build (TestFlight)", ph1a_when: "2026 Q3",
+    ph1a_desc: "AFib hybrid detection + 2-stage friend message + family medical consent + Apple Watch HealthKit integration.",
+    ph2_title: "Safety net public release review", ph2_when: "1y+",
+    ph2_desc: "MFDS digital health regulatory consultation → based on Apple Watch fall detection precedent.",
+    ph3_title: "Own device + SaMD certification", ph3_when: "5~7y",
+    ph3_desc: "Reuse preserved custom HW (SCAD·STL·BOM). Innovation track + new medical tech evaluation + insurance coverage.",
+    cta_title: "Outsourcing · Partnership · Investment Welcome",
+    cta_text: "SwiftUI · iOS native · BLE · signal processing · medical domain expertise. Single developer + AI collaboration reached Phase 1β halfway in 20 days.",
+    cta_contact: "CONTACT · jyc0289y@gmail.com",
+    footer: "CardioLink · SeouLink Corp · For fitness and wellness use only · © 2026",
+  },
+  ja: {
+    mode_simple: "簡単", mode_detail: "詳細",
+    hero_subtitle: "iOS 18 · POLAR H10 · 韓 · 英 · 日",
+    more_hint: "詳細を見る →",
+    modal_close: "ESC",
+    modal_back: "リストに戻る",
+    wm_status_ready: "✓ Phase 1β v1.0 リリース可能",
+    wm_status_pending: "⏳ Phase 1β v1.0 または v1.1+ で実装予定",
+    wd1_title: "ECG + 患者日記アンカー融合",
+    wd1_body: "<p>チャットエントリの瞬間、<strong>すべての生体・環境コンテキストが自動アンカー</strong>: ECG·HR·R-R·HRV·呼吸 BPM·ACC 強度·motion state·GPS 座標/速度/高度/方向·セッション engine·バッテリー·環境 dB。</p><p>記録タブの<strong>タイムライン navigator</strong>で全アンカーがバイオレットマーカーで表示。GOボタンで sub-pixel 精度でその時点に移動し、ECG·HR·R-R·RESP 4-strip を同時表示。NOW カーソルが viewport 中央に固定され、スクロールするとカーソル位置の時刻·HR·R-R·RESP がリアルタイム更新。</p><p>この機能が<strong>「患者日記 + ECG 融合プラットフォーム」という新カテゴリを定義</strong>。Apple Watch·KardiaMobile·Polar Beat·Holter — どこにもない初の統合。</p>",
+    wd2_title: "STT 音声チャット + マルチメディア添付",
+    wd2_body: "<p>iOS <code>SFSpeechRecognizer</code> オンデバイス韓·英音声認識。運動中·運転中など手が自由でない時もアンカー記録。</p><p>写真添付 (Standard 2048px JPEG q=0.75)、環境メタ (騒音 dB + ACC motion state、会話内容は即時破棄)。音声原本保存トグル。</p><p>医療定型テンプレート8個 (動悸·胸痛·めまい·呼吸困難·疲労·服薬·運動開始/終了) + ユーザーお気に入りスニペット + タグ自動補完。<strong>Phase 1β v1.0 出荷範囲に含む</strong>。</p>",
+    wd3_title: "ブラックボックス自動 ring buffer",
+    wd3_body: "<p>録画していなくても直前<strong>±N分の ECG/HR/ACC を常時 ring buffer 保存</strong>。チャットアンカー作成またはパニックボタンの瞬間、そのウィンドウを永久記録に昇格。</p><p>患者が「動悸発生」を感じてチャットを書くと、その±5分の ECG が自動保存 — 録画を先に開始しなくてOK。</p><p>3 Preset Profile (Discrete/Blackbox/Continuous) のコアエンジン。</p>",
+    wd4_title: "多日·多週連続録画の信頼性",
+    wd4_body: "<p>1時間単位自動分割 (CLE2 v2 フォーマット、5.6 MB/segment、24/日 168/週)。マルチセグメントで一週間連続録画 + 安定 Export。</p><p><strong>BLE 切断自動復旧</strong>: 指数バックオフ60回再試行 + 最後デバイスを UserDefaults 永続化 → アプリ起動時自動接続。バックグラウンド BLE 維持: AVAudioSession.playback + silent audio (0.005 volume) + UIBackgroundTask + 5s watchdog + interruption observer 3種。</p><p><strong>データ保存3重防御</strong>: 30s autoSaveTimer + didEnterBackground notification + willTerminate notification。クラッシュ/終了/強制 kill のどのケースでもデータ損失0。</p><p>このレベルの信頼性は Holter (病院専用) しか提供しない。<strong>CardioLink は一般ユーザーにも提供</strong>。</p>",
+    wd5_title: "使用パターン学習 → 能動推薦",
+    wd5_body: "<p>オンデバイス ML がチャットアンカーパターン·タグ頻度·イベント時刻を分析。<strong>「この時間帯に動悸が頻発します。カフェイン控えてみては?」</strong>のような能動提案。</p><p>医療診断は絶対 X (Principle 2)。患者が自分のパターンを認識できる統計·観察のみ提供。</p><p>v1.0 はデータ収集のみ、v1.1+ で UX 活性 (十分なデータ蓄積後)。</p>",
+    wd6_title: "匿名研究貢献ミッションブランディング",
+    wd6_body: "<p>オプトイン時、匿名化データ (PII 除去: text/写真/精密 GPS、医療 signal + 市·道レベル位置のみ保持) → 学術機関·公的研究ノードに共有。</p><p>患者を単なるユーザーではなく<strong>「未来の患者のスポンサー」</strong>に昇華。自分のデータが医学発展に貢献するという意識が retention を強化 + ミッションブランド形成。</p><p>v1.1+ オプトイン UX 活性。Phase 1β v1.0 から分離可能データモデル設計。</p>",
+    wd7_title: "ライブ呼吸 3-method アンサンブル",
+    wd7_body: "<p><strong>3つの独立信号で呼吸数推定後アンサンブル</strong>: ① ACC bandpass (胸の動き)、② EDR (ECG-Derived Respiration, R-peak amplitude variation)、③ RSA (R-R interval ベース)。</p><p>30秒ウィンドウ、5秒 cadence。<code>isReliable</code> 信頼度通過した結果のみ RESP JSONL に永久記録 (1 KB/min、1.4 MB/日)。</p><p>ライブカード + navigator 可視化 + アンカー自動キャプチャの3スタック。Apple Watch は運動モードのみ呼吸測定、CardioLink は 24/7 + 臨床級精度。</p><p>臨床 PSG を除けば消費者デバイスで最高精度の呼吸測定。</p>",
+    wd8_title: "臨床級睡眠トラッキング",
+    wd8_body: "<p>胸 ECG + ACC + 呼吸 3 信号融合 → <strong>臨床 PSG 比約 85% 精度</strong> (Apple Watch 手首 PPG ~70%, Oura ring ~80%)。胸位置の信号品質 + 呼吸データが最大の強み。</p><p>Sleep stage 分類 (Light/Deep/REM/Wake) は Cole-Kripke 変形 + HR drop パターン + 呼吸 cycle 分析。臨床 PSG 検証論文多数。</p><p>v1.0 は Sleep/Wake 基本検出のみ、v1.1+ で stage 分類活性。</p>",
+    hero_label: "患者日記 + ECG 融合プラットフォーム",
+    hero_title: "医学が測定してきた120年の空白を埋める",
+    hero_mission: "120年間、医学は心臓を測定してきた。CardioLinkは心臓が何に反応するかを測定する。",
+    hero_intro: "CardioLinkは単なるECGビューアではない。<strong>チャットアンカー + 連続ECG + 環境コンテキスト</strong>を融合し、不整脈・心血管患者が自分のパターンを初めて客観化できるツールを作る。",
+    chip_polar: "Polar H10 130Hz raw ECG",
+    chip_anchor: "チャットアンカー融合",
+    chip_resp: "呼吸 3-method アンサンブル",
+    chip_segment: "多日・多週連続録画",
+    chip_local: "100% ローカル優先",
+    chip_ios18: "iOS 18 native",
+    stat_dev_label: "開発期間", stat_dev_value: "20日", stat_dev_desc: "04-24 登録 → 05-13 v0.9.1",
+    stat_features_label: "差別優位", stat_features_value: "8個", stat_features_desc: "3個 Phase 1β ready",
+    stat_sample_label: "サンプルレート", stat_sample_desc: "raw ECG、AFib研究検証",
+    stat_battery_label: "H10 バッテリー", stat_battery_desc: "ハイブリッドモード / IP68",
+    gap_title: "120年の空白",
+    gap_intro: "ECGセンサーのハードウェア民主化は120年にわたって事実上完成した。しかし同じ120年の間、<strong>「ECGがなぜそう変わったか」を測定するツールは一歩も進まなかった。</strong>",
+    tl_1903: "Einthoven 弦電流計 — 冷蔵庫サイズ",
+    tl_1957: "Holter 24時間 — 紙日記の欠落",
+    tl_1980: "カセット Holter — 医療機関貸出",
+    tl_2018: "Apple Watch — 30秒スナップショット",
+    tl_2020: "KardiaMobile — 単発測定",
+    tl_2025: "Polar H10 — raw ECG 誰でも",
+    tl_2026: "CardioLink — 日記 + ECG 融合",
+    gap_detail: "医学研究は1970年代から、感情・姿勢・活動・ストレス・睡眠が心臓機能に影響することを知っていた。学術文献は豊富。しかし個別患者に適用するには日常データが必要で、それを捕える道具がなかった。医師に頼れたのは<strong>後ろ向き想起 (retrospective recall)</strong>のみ — 不正確で有名な方法。<strong>結果</strong>:「医師のECGは正常なのに患者は不調を訴える」→「大丈夫、気にしすぎ」→ 自分の経験が否定されたと感じる → 医療システム不信 → 診断・治療の遅延。<strong>このシナリオを世界中の不整脈・心血管患者数千万人が毎日経験している。</strong>CardioLinkがその空白を埋める。",
+    cases_title: "患者インパクトシナリオ ABCD",
+    cases_intro: "現行医療システムで日常的に解決されない4つの問題。CardioLinkが定量的・構造的に改善する。",
+    cmp_now: "現状", cmp_after: "CardioLink後",
+    case_a_title: "「原因不明の動悸」",
+    case_a_before: "医師5回受診、毎回ECG正常 → 「ストレス減らして」→ 慢性不安",
+    case_a_after: "3週間データ → 「午前9~10時カフェイン+通勤クラスタ」→ 明確なパターン",
+    case_b_title: "薬効果の客観化",
+    case_b_before: "患者主観「少し良くなった気がする」→ 医師推測診断",
+    case_b_after: "服薬前後30日比較: 動悸頻度 -34%、持続時間 -47%",
+    case_c_title: "ER triage",
+    case_c_before: "患者意識低下 + 30分問診 → ゴールデンタイム喪失",
+    case_c_after: "iPhone表示 → 48時間 chat + ECG → 5分以内判断",
+    case_d_title: "保険・障害評価",
+    case_d_before: "「客観的証拠不足」→ 給付拒否 → 患者の権利侵害",
+    case_d_after: "月平均11.3回発作、平均6分22秒 → 反論不可データ",
+    weapons_title: "8つの差別優位",
+    weapons_intro: "App Store v1.0時点で競合がどこも持っていない8つ。このスタックが「患者日記 + ECG融合プラットフォーム」という新カテゴリを定義する。",
+    w1_name: "ECG + 患者日記アンカー融合",
+    w1_desc: "チャットエントリ時にECG·HR·HRV·呼吸·GPS·動作を自動アンカー。タイムライン navigatorで再構成。",
+    w2_name: "STT音声チャット + マルチメディア",
+    w2_desc: "SFSpeechRecognizer オンデバイス韓·英。写真·音声·環境メタを同時アンカー。",
+    w3_name: "ブラックボックス自動 ring buffer",
+    w3_desc: "±N分 ECG 自動保存。チャットトリガで永久記録に昇格。",
+    w4_name: "多日・多週連続録画",
+    w4_desc: "1時間自動分割 + マルチセグメント。BLE切断自動復旧 + データ保存性3重防御。",
+    w5_name: "使用パターン学習 → 能動推薦",
+    w5_desc: "ユーザー行動分析 → 「この時間帯に動悸が頻発」能動提案。",
+    w6_name: "匿名研究貢献ミッションブランディング",
+    w6_desc: "オプトイン匿名データ → 学術機関共有。患者が未来の患者のスポンサーに。",
+    w7_name: "呼吸ライブ 3-method アンサンブル",
+    w7_desc: "ACC bandpass + EDR + RSA。ライブ + 永久記録 + navigator可視化。",
+    w8_name: "臨床級睡眠トラッキング",
+    w8_desc: "胸ECG + ACC + 呼吸 → 臨床PSG比85% (Apple Watch ~70%)。",
+    cmp_table_title: "競合比較マトリックス",
+    cmp_feature: "差別優位", cmp_holter: "Holter (病院)",
+    cmp_row1: "ECG + 日記アンカー融合", cmp_row2: "STT音声 + マルチメディア",
+    cmp_row3: "ブラックボックス ring buffer", cmp_row4: "多日・多週連続録画",
+    cmp_row5: "パターン学習推薦", cmp_row6: "匿名研究貢献ミッション",
+    cmp_row7: "呼吸 3-method アンサンブル", cmp_row8: "臨床級睡眠トラッキング",
+    cmp_holter_only: "✓ 医療機関専用", cmp_exercise: "⚠ 運動 only",
+    cmp_psg: "⚠ PSG only", cmp_hospital: "✓ 病院1泊",
+    showcase_title: "機能ショーケース",
+    showcase_intro: "実際の使用画面。ダークベース + シアンアクセントのデザインシステム。",
+    cat_live: "リアルタイム ECG モニタリング",
+    cat_live_desc: "130Hz raw ECG + HR/RESP 3パネルカード + ピンチズーム (2.5s ~ 40s) + 「LIVE」パルスインジケータ",
+    cat_record: "記録タブ + タイムライン navigator",
+    cat_record_desc: "毎時単位自動分割 + 4 strip同時可視化 + カーソル追随 NOW·HR·R-R·RESP リアルタイム更新 + チャットアンカーマーカー + GO ジャンプ sub-pixel精度",
+    cat_device: "デバイス接続 + 信頼性",
+    cat_device_desc: "Polar H10 ペアリング + 自動再接続 + バッテリー + 信号強度。バックグラウンドBLE維持 + UIBackgroundTask + AVAudioSession observer 3種。",
+    cat_multi: "マルチタスキング + バックグラウンド",
+    cat_multi_desc: "PIP動画視聴 + 他アプリ使用中もECG記録維持。画面ロック状態でもBLE接続維持。",
+    cat_more: "全キャプチャ (詳細)",
+    cat_more_desc: "開発過程の様々な状態 (READY · CONNECTING · LIVE · PIP · メモ入力)。クリックで拡大。",
+    principles_title: "4大運営原則",
+    principles_intro: "すべての機能・人事・外部発信の決定は次の4原則に沿わなければならない。",
+    p1_title: "患者優先 (Patient-First)",
+    p1_desc: "すべての決定の1次基準は「患者の実質的リスクをどう減らすか」。規制·市場性·技術的優雅さは副次。",
+    p2_title: "診断回避、観察提供",
+    p2_desc: "自動診断·治療推奨は禁止。ただし客観データの可視化·統計·アンカーは積極提供。「観察された」表現。",
+    p3_title: "100% ローカル優先",
+    p3_desc: "データはデバイスに。外部送信は明示的ユーザー行動のみ。バックエンドサーバは永遠に持たない。",
+    p4_title: "ミッション > 機能 > 規制",
+    p4_desc: "規制は患者到達のためのツールに過ぎず、ミッションの尺度ではない。",
+    tech_title: "技術スタック",
+    tech_intro: "iOS 18 native API + Polar BLE SDK + 自製信号処理 + Apple エコシステム統合。",
+    tech_detail_title: "技術深度 (オプション)",
+    td1: "<strong style=\"color:var(--ink)\">iOS 18 native scroll</strong>: ScrollPosition.scrollTo(x:) + onScrollGeometryChange — sub-pixel精度カーソル",
+    td2: "<strong style=\"color:var(--ink)\">CLE2 v2 format</strong>: 32B header + 12B record (UInt64 device ns + Int32 µV)",
+    td3: "<strong style=\"color:var(--ink)\">Clock Anchor</strong>: H10 firmware reset自動補正。sample間隔はH10、絶対wall clockはiPhoneがanchor。",
+    td4: "<strong style=\"color:var(--ink)\">3-method 呼吸アンサンブル</strong>: ACC bandpass + EDR + RSA。30s windowを5s cadenceで処理。",
+    td5: "<strong style=\"color:var(--ink)\">バックグラウンドBLE維持</strong>: AVAudioSession.playback + silent audio + UIBackgroundTask + 5s watchdog + 3 interruption observer。",
+    td6: "<strong style=\"color:var(--ink)\">データ保存3重防御</strong>: 30s autoSaveTimer + didEnterBackground + willTerminate notification。",
+    td7: "<strong style=\"color:var(--ink)\">自動再接続</strong>: 最後のデバイスUserDefaults永続化 + アプリ起動時自動接続 + 指数バックオフ (60回試行)。",
+    dev_title: "開発タイムライン — 20日",
+    dev_intro: "P27 登録からv0.9.1安定ビルドまで20日。8つの差別優位のうち3つが Phase 1β v1.0 リリース可能水準に到達。",
+    dev_0424: "P27 登録 + 総合レビュー + カスタムHW v4 設計完成 (Phase 3+ 資産保管)",
+    dev_0511a: "Polar H10 ピボット決定 + iOS アプリスキャフォールド + ECG 実測ストリーミング成功",
+    dev_0511b: "タイムスタンプ同期 + 1時間ファイル分割 + multi-segment Export",
+    dev_0511c: "🌟 ミッション定義 + 4原則 + 8差別優位確定 (3時間思考)",
+    dev_0512a: "タイムライン navigator 可視化完成 (anchor + 4 strip + ピンチズーム)",
+    dev_0512b: "iOS 18 deployment + ScrollPosition + iPad 最適化",
+    dev_0513: "GPS anchor + Apple Maps + 自動再接続 + バックグラウンド強化 + CLAUDE.md slim化",
+    roadmap_title: "Phase ロードマップ",
+    ph1b_title: "市場公開 v1.0 (App Store)", ph1b_when: "2026 Q2~Q3",
+    ph1b_desc: "ECG live+録画+HRV+Export+chat anchor+呼吸+GPS+iPad sync。Safety net 非活性、診断表現 0。",
+    ph1a_title: "本人安全網ビルド (TestFlight)", ph1a_when: "2026 Q3",
+    ph1a_desc: "AFib hybrid検出 + 知人2段階メッセージ + 家族医療同意 + Apple Watch HealthKit統合。",
+    ph2_title: "安全網一般リリース検討", ph2_when: "1年+",
+    ph2_desc: "MFDS デジタル医療規制相談 → Apple Watch転倒検出の先例を基に。",
+    ph3_title: "自製デバイス + SaMD認証", ph3_when: "5~7年",
+    ph3_desc: "保管カスタムHW (SCAD·STL·BOM) 再活用。革新トラック + 新医療技術評価 + 保険収載。",
+    cta_title: "外注·提携·投資のご提案歓迎",
+    cta_text: "SwiftUI · iOS native · BLE · 信号処理 · 医療ドメイン専門性。単独開発者 + AI協業で20日にPhase 1β半ば到達。",
+    cta_contact: "CONTACT · jyc0289y@gmail.com",
+    footer: "CardioLink · SeouLink Corp · For fitness and wellness use only · © 2026",
+  }
+};
+
+// === Apply translations ===
+let currentLang = 'ko';
+function applyLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (i18n[lang] && i18n[lang][key] !== undefined) {
+      el.innerHTML = i18n[lang][key];
+    }
+  });
+  // Modal이 열려있으면 현재 데이터로 다시 렌더
+  if (document.getElementById('weapon-modal').classList.contains('active')) {
+    const num = parseInt(document.getElementById('wm-num').textContent.replace('WEAPON #', ''));
+    if (num) renderWeaponModal(num);
+  }
+}
+
+// === Weapon modal ===
+function openWeapon(num) {
+  renderWeaponModal(num);
+  document.getElementById('weapon-modal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  // 스크롤 위치 modal 상단으로
+  document.getElementById('weapon-modal').scrollTop = 0;
+}
+
+function closeWeapon() {
+  document.getElementById('weapon-modal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function renderWeaponModal(num) {
+  const lang = currentLang;
+  const t = i18n[lang];
+  const data = weaponData[num];
+  const isReady = [1, 4, 7].includes(num);
+
+  document.getElementById('wm-num').textContent = `WEAPON #${String(num).padStart(2, '0')}`;
+  document.getElementById('wm-title').innerHTML = t[`wd${num}_title`] || '';
+  const statusEl = document.getElementById('wm-status');
+  statusEl.textContent = isReady ? t.wm_status_ready : t.wm_status_pending;
+  statusEl.className = 'weapon-modal-status ' + (isReady ? 'ws-ready' : 'ws-pending');
+  document.getElementById('wm-body').innerHTML = t[`wd${num}_body`] || '';
+
+  // 캡쳐 이미지 (있는 경우만)
+  const imgContainer = document.getElementById('wm-images');
+  imgContainer.innerHTML = '';
+  if (data.images && data.images.length > 0) {
+    data.images.forEach(idx => {
+      const ext = (idx === 29) ? 'jpeg' : 'png';
+      const img = document.createElement('img');
+      img.src = `assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-${idx}.${ext}`;
+      img.alt = `Weapon ${num} capture ${idx}`;
+      img.loading = 'lazy';
+      img.addEventListener('click', () => {
+        document.getElementById('lightbox-img').src = img.src;
+        document.getElementById('lightbox').classList.add('active');
+      });
+      imgContainer.appendChild(img);
+    });
+  }
+}
+
+// ESC 키로 modal 닫기
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('weapon-modal').classList.contains('active')) {
+      closeWeapon();
+    }
+    if (document.getElementById('lightbox').classList.contains('active')) {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+  }
+});
+
+// 외부 클릭으로 modal 닫기
+document.getElementById('weapon-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'weapon-modal') closeWeapon();
+});
+
+// === Language toggle ===
+document.querySelectorAll('#lang-toggle .toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#lang-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyLang(btn.dataset.lang);
+  });
+});
+
+// === Mode toggle ===
+document.querySelectorAll('#mode-toggle .toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#mode-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (btn.dataset.mode === 'simple') {
+      document.body.classList.add('simple-mode');
+    } else {
+      document.body.classList.remove('simple-mode');
+    }
+  });
+});
+
+// === Populate all-screens grid (detail mode) ===
+const allGrid = document.getElementById('all-screens');
+if (allGrid) {
+  // 1~54 (jpeg for 29)
+  for (let i = 1; i <= 54; i++) {
+    const ext = (i === 29) ? 'jpeg' : 'png';
+    const img = document.createElement('img');
+    img.src = `assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-${i}.${ext}`;
+    img.alt = `Capture ${i}`;
+    img.loading = 'lazy';
+    allGrid.appendChild(img);
+  }
+}
+
+// === Lightbox ===
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+document.querySelectorAll('.screen-grid img').forEach(img => {
+  img.addEventListener('click', () => {
+    lightboxImg.src = img.src;
+    lightbox.classList.add('active');
+  });
+});
+// Re-bind for dynamically added images
+new MutationObserver(() => {
+  document.querySelectorAll('.screen-grid img').forEach(img => {
+    if (img.dataset.bound) return;
+    img.dataset.bound = '1';
+    img.addEventListener('click', () => {
+      lightboxImg.src = img.src;
+      lightbox.classList.add('active');
+    });
+  });
+}).observe(document.body, { childList: true, subtree: true });
+
+// Initial apply
+applyLang('ko');
+</script>
+
+</body>
+</html>
