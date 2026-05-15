@@ -358,11 +358,26 @@
   }
   .screen-grid img:hover { border-color: var(--cyan); transform: scale(1.02); }
 
-  /* PC layout: 이미지 좌측 220px + 텍스트 우측 (단일 이미지 카테고리) */
+  /* Showcase wrapper — PC 2열 grid (단일 이미지 카드들) + .wide는 전체 너비 */
+  .screen-showcase-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* PC layout */
   @media (min-width: 720px) {
+    .screen-showcase-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .screen-cat.wide {
+      grid-column: 1 / -1;  /* 다중 이미지 카드는 전체 너비 차지 */
+    }
+    /* 단일 이미지 카드: 좌 이미지 180px + 우 텍스트 */
     .screen-cat:not(.wide) {
-      grid-template-columns: 220px 1fr;
-      gap: 22px;
+      grid-template-columns: 180px 1fr;
+      gap: 18px;
     }
     .screen-cat:not(.wide) .screen-grid {
       grid-row: 1 / span 2;
@@ -373,8 +388,9 @@
     .screen-cat:not(.wide) .screen-cat-desc {
       grid-column: 2;
     }
-    .screen-cat:not(.wide) .screen-cat-title { padding-top: 8px; }
-    /* 다중 이미지 카테고리 (.wide) — 텍스트 위 + 이미지 아래 가로 배치 */
+    .screen-cat:not(.wide) .screen-cat-title { padding-top: 6px; }
+    .screen-cat:not(.wide) .screen-grid img { max-width: 180px; }
+    /* 다중 이미지 카테고리 (.wide) — 텍스트 위 + 이미지 아래 가로 5장 */
     .screen-cat.wide .screen-grid {
       grid-template-columns: repeat(5, 1fr);
       gap: 8px;
@@ -834,6 +850,7 @@
   <h2 data-i18n="showcase_title">기능 시연</h2>
   <p data-i18n="showcase_intro">실제 사용 화면. 다크 베이스 + 시안 액센트 디자인 시스템.</p>
 
+  <div class="screen-showcase-grid">
   <div class="screen-cat">
     <div class="screen-cat-title">▸ <span data-i18n="cat_live">실시간 ECG 모니터링</span></div>
     <div class="screen-cat-desc" data-i18n="cat_live_desc">130Hz raw ECG + HR/RESP/STATUS 3패널 + 핀치 줌 (2.5초 ~ 40초 view) + "LIVE" 펄스 인디케이터 + HR/R-R/RESP trend 2분 윈도우</div>
@@ -876,6 +893,7 @@
     <div class="screen-grid">
       <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-9.png" alt="Profile usage stats">
     </div>
+  </div>
   </div>
 </section>
 
