@@ -332,22 +332,55 @@
   table.matrix .ours { background: rgba(0, 229, 255, 0.06); }
 
   /* Screenshots gallery */
-  .screen-cat { margin: 30px 0 12px; }
+  .screen-cat {
+    margin: 24px 0;
+    padding: 18px;
+    background: var(--bg1);
+    border: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    align-items: start;
+  }
   .screen-cat-title {
     font-family: "SF Mono", monospace; font-size: 11px; font-weight: 700;
-    color: var(--cyan); letter-spacing: 2px; margin-bottom: 12px;
+    color: var(--cyan); letter-spacing: 2px;
   }
-  .screen-cat-desc { font-size: 13px; color: var(--inkDim); margin-bottom: 14px; }
+  .screen-cat-desc { font-size: 13px; color: var(--inkDim); }
   .screen-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 10px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
   }
   .screen-grid img {
     width: 100%; aspect-ratio: 9/19.5; object-fit: cover;
     border: 1px solid var(--line); cursor: pointer; transition: all 0.2s;
-    background: var(--bg1);
+    background: var(--bg1); max-width: 220px;
   }
   .screen-grid img:hover { border-color: var(--cyan); transform: scale(1.02); }
+
+  /* PC layout: 이미지 좌측 220px + 텍스트 우측 (단일 이미지 카테고리) */
+  @media (min-width: 720px) {
+    .screen-cat:not(.wide) {
+      grid-template-columns: 220px 1fr;
+      gap: 22px;
+    }
+    .screen-cat:not(.wide) .screen-grid {
+      grid-row: 1 / span 2;
+      grid-column: 1;
+      grid-template-columns: 1fr;
+    }
+    .screen-cat:not(.wide) .screen-cat-title,
+    .screen-cat:not(.wide) .screen-cat-desc {
+      grid-column: 2;
+    }
+    .screen-cat:not(.wide) .screen-cat-title { padding-top: 8px; }
+    /* 다중 이미지 카테고리 (.wide) — 텍스트 위 + 이미지 아래 가로 배치 */
+    .screen-cat.wide .screen-grid {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .screen-cat.wide .screen-grid img { max-width: 100%; }
+  }
 
   /* Lightbox */
   .lightbox {
@@ -817,7 +850,7 @@
     </div>
   </div>
 
-  <div class="screen-cat">
+  <div class="screen-cat wide">
     <div class="screen-cat-title">▸ <span data-i18n="cat_record">기록 탭 — 일자/시간대 navigator</span></div>
     <div class="screen-cat-desc" data-i18n="cat_record_desc">날짜별 누적 → 정시 단위 자동 분할 → 시간대 상세 진입. 4 strip (ECG·HR·R-R·RESP) 동시 시각화 + 화면 가운데 NOW cursor 고정 + 스크롤 시 cursor 위치의 시각·HR·R-R·RESP 실시간 갱신 + 채팅 anchor 마커 → GO 점프 sub-pixel 정확</div>
     <div class="screen-grid">
