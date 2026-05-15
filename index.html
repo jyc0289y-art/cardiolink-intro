@@ -803,50 +803,45 @@
 
   <div class="screen-cat">
     <div class="screen-cat-title">▸ <span data-i18n="cat_live">실시간 ECG 모니터링</span></div>
-    <div class="screen-cat-desc" data-i18n="cat_live_desc">130Hz raw ECG + HR/RESP 3패널 카드 + 핀치 줌 (2.5초 ~ 40초 view) + "LIVE" 펄스 인디케이터</div>
+    <div class="screen-cat-desc" data-i18n="cat_live_desc">130Hz raw ECG + HR/RESP/STATUS 3패널 + 핀치 줌 (2.5초 ~ 40초 view) + "LIVE" 펄스 인디케이터 + HR/R-R/RESP trend 2분 윈도우</div>
     <div class="screen-grid">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-15.png" alt="Live ECG with zoom">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-10.png" alt="Live ECG READY">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-5.png" alt="Live ECG REC">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-35.png" alt="Live ECG monitoring">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-1.png" alt="Live ECG with zoom and trend">
     </div>
   </div>
 
   <div class="screen-cat">
-    <div class="screen-cat-title">▸ <span data-i18n="cat_record">기록 탭 + 시간축 navigator</span></div>
-    <div class="screen-cat-desc" data-i18n="cat_record_desc">정시 단위 자동 분할 + 4 strip 동시 시각화 + cursor 따라 NOW·HR·R-R·RESP 실시간 갱신 + 채팅 anchor 마커 + GO 점프 sub-pixel 정확</div>
+    <div class="screen-cat-title">▸ <span data-i18n="cat_journal">일지 — 채팅 anchor 일람</span></div>
+    <div class="screen-cat-desc" data-i18n="cat_journal_desc">시각·메모·기분·자동 anchor (HR / R-R / RESP) 한 줄 표시. 텍스트·태그 검색 + 항목 터치 시 상세 시트 (시각 / 바이탈 / 컨텍스트 / 지도)</div>
     <div class="screen-grid">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-20.png" alt="Hour navigator">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-25.png" alt="Connecting state">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-21.png" alt="Hour navigator detail">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-22.png" alt="Hour navigator anchor">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-2.png" alt="Journal entries with anchor vitals">
+    </div>
+  </div>
+
+  <div class="screen-cat">
+    <div class="screen-cat-title">▸ <span data-i18n="cat_record">기록 탭 — 일자/시간대 navigator</span></div>
+    <div class="screen-cat-desc" data-i18n="cat_record_desc">날짜별 누적 → 정시 단위 자동 분할 → 시간대 상세 진입. 4 strip (ECG·HR·R-R·RESP) 동시 시각화 + 화면 가운데 NOW cursor 고정 + 스크롤 시 cursor 위치의 시각·HR·R-R·RESP 실시간 갱신 + 채팅 anchor 마커 → GO 점프 sub-pixel 정확</div>
+    <div class="screen-grid">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-3.png" alt="Records by day">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-4.png" alt="Hour split">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-5.png" alt="Hour detail start">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-6.png" alt="Hour detail with anchor">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-7.png" alt="Hour detail cursor moved">
     </div>
   </div>
 
   <div class="screen-cat">
     <div class="screen-cat-title">▸ <span data-i18n="cat_device">디바이스 연결 + 안정성</span></div>
-    <div class="screen-cat-desc" data-i18n="cat_device_desc">Polar H10 페어링 + 자동 재연결 + 배터리 + 신호 강도. 백그라운드 BLE 유지 trick + UIBackgroundTask + AVAudioSession observer 3종.</div>
+    <div class="screen-cat-desc" data-i18n="cat_device_desc">Polar H10 STREAMING 100% (최근 측정 시각 표시) · 자동 재연결 (마지막 디바이스 persist + 앱 재시작 시 자동 connect + 지수 backoff) · 백그라운드 BLE 유지 (silent audio + UIBackgroundTask + watchdog + 3 AVAudioSession observer)</div>
     <div class="screen-grid">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-30.png" alt="Device connection">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-31.png" alt="Device list">
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-8.png" alt="Device connected H10">
     </div>
   </div>
 
   <div class="screen-cat">
-    <div class="screen-cat-title">▸ <span data-i18n="cat_multi">멀티태스킹 + 백그라운드</span></div>
-    <div class="screen-cat-desc" data-i18n="cat_multi_desc">PIP 비디오 시청 + 다른 앱 사용 중에도 ECG 기록 유지. 화면 잠금 상태에서도 BLE 연결 유지.</div>
+    <div class="screen-cat-title">▸ <span data-i18n="cat_profile">사용량 통계 (실측 누적)</span></div>
+    <div class="screen-cat-desc" data-i18n="cat_profile_desc">로그인 옵션 (비로그인에도 100% 작동) · 본인 사용 누적: 52 세션 / 31 일지 / <strong>총 녹화 2,228시간 35분</strong> / 데이터 사용량 231.9 MB · 다일·다주 연속 녹화 안정성 실증</div>
     <div class="screen-grid">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-1.png" alt="PIP multitasking">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-50.png" alt="Multitask">
-      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-45.png" alt="Multitask 2">
-    </div>
-  </div>
-
-  <div class="screen-cat detail-only">
-    <div class="screen-cat-title">▸ <span data-i18n="cat_more">전체 캡쳐 (상세)</span></div>
-    <div class="screen-cat-desc" data-i18n="cat_more_desc">개발 과정의 다양한 상태 (READY · CONNECTING · LIVE · PIP · 메모 입력). 클릭하면 확대.</div>
-    <div class="screen-grid" id="all-screens">
-      <!-- populated by JS -->
+      <img src="assets/screenshots/KakaoTalk_Photo_2026-05-15-18-28-05-9.png" alt="Profile usage stats">
     </div>
   </div>
 </section>
@@ -1031,16 +1026,17 @@
 </div>
 
 <script>
-// === Weapon detail mapping (images + key) ===
+// === Weapon detail mapping (9장 홍보 캡쳐) ===
+const promoBase = 'KakaoTalk_Photo_2026-05-15-18-28-05';
 const weaponData = {
-  1: { images: [20, 21, 22, 24] },         // anchor 융합 — 시간축 navigator + anchor markers
-  2: { images: [] },                        // STT 미구현
-  3: { images: [] },                        // 블랙박스 미구현
-  4: { images: [5, 30, 23, 26] },          // 다일 연속 — 세션 리스트 + 디바이스 + 다양한 녹화 시각
-  5: { images: [] },                        // Smart Rec 미구현
-  6: { images: [] },                        // 익명 연구 미구현
-  7: { images: [15, 10, 27, 28] },         // 호흡 ensemble — RESP brpm 표시
-  8: { images: [] },                        // 수면 미구현
+  1: { images: [2, 6, 5, 7] },    // anchor 융합 — 일지 + cursor + 시간대 상세
+  2: { images: [] },                // STT 미구현
+  3: { images: [] },                // 블랙박스 미구현
+  4: { images: [3, 4, 9, 8] },    // 다일 연속 — 누적 4일치 + 시간대 분할 + 총 2228h + STREAMING 디바이스
+  5: { images: [] },                // Smart Rec 미구현
+  6: { images: [] },                // 익명 연구 미구현
+  7: { images: [1, 5, 6, 2] },    // 호흡 ensemble — 라이브 + 시간대 + anchor + 일지
+  8: { images: [] },                // 수면 미구현
 };
 
 // === i18n data ===
@@ -1137,15 +1133,15 @@ const i18n = {
     showcase_title: "기능 시연",
     showcase_intro: "실제 사용 화면. 다크 베이스 + 시안 액센트 디자인 시스템.",
     cat_live: "실시간 ECG 모니터링",
-    cat_live_desc: "130Hz raw ECG + HR/RESP 3패널 카드 + 핀치 줌 (2.5초 ~ 40초 view) + \"LIVE\" 펄스 인디케이터",
-    cat_record: "기록 탭 + 시간축 navigator",
-    cat_record_desc: "정시 단위 자동 분할 + 4 strip 동시 시각화 + cursor 따라 NOW·HR·R-R·RESP 실시간 갱신 + 채팅 anchor 마커 + GO 점프 sub-pixel 정확",
+    cat_live_desc: "130Hz raw ECG + HR/RESP/STATUS 3패널 + 핀치 줌 (2.5초 ~ 40초 view) + \"LIVE\" 펄스 인디케이터 + HR/R-R/RESP trend 2분 윈도우",
+    cat_journal: "일지 — 채팅 anchor 일람",
+    cat_journal_desc: "시각·메모·기분·자동 anchor (HR / R-R / RESP) 한 줄 표시. 텍스트·태그 검색 + 항목 터치 시 상세 시트 (시각 / 바이탈 / 컨텍스트 / 지도)",
+    cat_record: "기록 탭 — 일자/시간대 navigator",
+    cat_record_desc: "날짜별 누적 → 정시 단위 자동 분할 → 시간대 상세 진입. 4 strip (ECG·HR·R-R·RESP) 동시 시각화 + 화면 가운데 NOW cursor 고정 + 스크롤 시 cursor 위치의 시각·HR·R-R·RESP 실시간 갱신 + 채팅 anchor 마커 → GO 점프 sub-pixel 정확",
     cat_device: "디바이스 연결 + 안정성",
-    cat_device_desc: "Polar H10 페어링 + 자동 재연결 + 배터리 + 신호 강도. 백그라운드 BLE 유지 trick + UIBackgroundTask + AVAudioSession observer 3종.",
-    cat_multi: "멀티태스킹 + 백그라운드",
-    cat_multi_desc: "PIP 비디오 시청 + 다른 앱 사용 중에도 ECG 기록 유지. 화면 잠금 상태에서도 BLE 연결 유지.",
-    cat_more: "전체 캡쳐 (상세)",
-    cat_more_desc: "개발 과정의 다양한 상태 (READY · CONNECTING · LIVE · PIP · 메모 입력). 클릭하면 확대.",
+    cat_device_desc: "Polar H10 STREAMING 100% (최근 측정 시각 표시) · 자동 재연결 (마지막 디바이스 persist + 앱 재시작 시 자동 connect + 지수 backoff) · 백그라운드 BLE 유지 (silent audio + UIBackgroundTask + watchdog + 3 AVAudioSession observer)",
+    cat_profile: "사용량 통계 (실측 누적)",
+    cat_profile_desc: "로그인 옵션 (비로그인에도 100% 작동) · 본인 사용 누적: 52 세션 / 31 일지 / <strong>총 녹화 2,228시간 35분</strong> / 데이터 사용량 231.9 MB · 다일·다주 연속 녹화 안정성 실증",
     principles_title: "4대 운영 원칙",
     principles_intro: "모든 기능·인사·외부 발신 결정은 다음 4가지 원칙에 부합해야 한다.",
     p1_title: "환자 우선 (Patient-First)",
@@ -1281,15 +1277,15 @@ const i18n = {
     showcase_title: "Feature Showcase",
     showcase_intro: "Actual screens. Dark base + cyan accent design system.",
     cat_live: "Real-time ECG monitoring",
-    cat_live_desc: "130Hz raw ECG + HR/RESP 3-panel cards + pinch zoom (2.5s ~ 40s view) + \"LIVE\" pulse indicator",
-    cat_record: "Records tab + time-axis navigator",
-    cat_record_desc: "Hour-bounded auto-split + 4-strip simultaneous visualization + cursor-following NOW·HR·R-R·RESP live update + chat anchor markers + sub-pixel GO jump",
+    cat_live_desc: "130Hz raw ECG + HR/RESP/STATUS 3-panel + pinch zoom (2.5s ~ 40s) + \"LIVE\" pulse indicator + HR/R-R/RESP 2-min trend window",
+    cat_journal: "Journal — chat anchor list",
+    cat_journal_desc: "Time · memo · mood · auto-anchor (HR / R-R / RESP) one-line display. Text/tag search + tap-to-detail sheet (time / vitals / context / map).",
+    cat_record: "Records — by day/hour navigator",
+    cat_record_desc: "Day-grouped → hour-bounded auto-split → hour detail. 4-strip (ECG·HR·R-R·RESP) simultaneous viz + center-fixed NOW cursor + scroll updates time/HR/R-R/RESP at cursor in real time + chat anchor markers → sub-pixel GO jump.",
     cat_device: "Device connection + reliability",
-    cat_device_desc: "Polar H10 pairing + auto-reconnect + battery + RSSI. Background BLE keep + UIBackgroundTask + 3 AVAudioSession observers.",
-    cat_multi: "Multitasking + background",
-    cat_multi_desc: "ECG recording continues during PIP video + other apps. BLE connection maintained even on locked screen.",
-    cat_more: "All captures (detail)",
-    cat_more_desc: "Various states during development (READY · CONNECTING · LIVE · PIP · memo input). Click to enlarge.",
+    cat_device_desc: "Polar H10 STREAMING 100% (last-measured time shown) · auto-reconnect (last device persisted + auto on app launch + exponential backoff) · background BLE keep (silent audio + UIBackgroundTask + watchdog + 3 AVAudioSession observers).",
+    cat_profile: "Usage stats (actual cumulative)",
+    cat_profile_desc: "Login optional (100% functional without login) · personal usage: 52 sessions / 31 journal entries / <strong>total recording 2,228 hours 35 min</strong> / 231.9 MB data · multi-day continuous recording stability proven.",
     principles_title: "4 Operating Principles",
     principles_intro: "All feature, HR, and external communication decisions must align with these 4 principles.",
     p1_title: "Patient-First",
@@ -1425,15 +1421,15 @@ const i18n = {
     showcase_title: "機能ショーケース",
     showcase_intro: "実際の使用画面。ダークベース + シアンアクセントのデザインシステム。",
     cat_live: "リアルタイム ECG モニタリング",
-    cat_live_desc: "130Hz raw ECG + HR/RESP 3パネルカード + ピンチズーム (2.5s ~ 40s) + 「LIVE」パルスインジケータ",
-    cat_record: "記録タブ + タイムライン navigator",
-    cat_record_desc: "毎時単位自動分割 + 4 strip同時可視化 + カーソル追随 NOW·HR·R-R·RESP リアルタイム更新 + チャットアンカーマーカー + GO ジャンプ sub-pixel精度",
+    cat_live_desc: "130Hz raw ECG + HR/RESP/STATUS 3パネル + ピンチズーム (2.5s ~ 40s) + 「LIVE」パルスインジケータ + HR/R-R/RESP trend 2分ウィンドウ",
+    cat_journal: "日記 — チャットアンカー一覧",
+    cat_journal_desc: "時刻·メモ·気分·自動アンカー (HR / R-R / RESP) を1行表示。テキスト·タグ検索 + 項目タップで詳細シート (時刻 / バイタル / コンテキスト / 地図)",
+    cat_record: "記録タブ — 日付/時間帯 navigator",
+    cat_record_desc: "日付別蓄積 → 毎時単位自動分割 → 時間帯詳細。4 strip (ECG·HR·R-R·RESP) 同時可視化 + 画面中央 NOW カーソル固定 + スクロール時カーソル位置の時刻·HR·R-R·RESP リアルタイム更新 + チャットアンカーマーカー → GO ジャンプ sub-pixel精度",
     cat_device: "デバイス接続 + 信頼性",
-    cat_device_desc: "Polar H10 ペアリング + 自動再接続 + バッテリー + 信号強度。バックグラウンドBLE維持 + UIBackgroundTask + AVAudioSession observer 3種。",
-    cat_multi: "マルチタスキング + バックグラウンド",
-    cat_multi_desc: "PIP動画視聴 + 他アプリ使用中もECG記録維持。画面ロック状態でもBLE接続維持。",
-    cat_more: "全キャプチャ (詳細)",
-    cat_more_desc: "開発過程の様々な状態 (READY · CONNECTING · LIVE · PIP · メモ入力)。クリックで拡大。",
+    cat_device_desc: "Polar H10 STREAMING 100% (最終測定時刻表示) · 自動再接続 (最終デバイス永続化 + アプリ起動時自動接続 + 指数バックオフ) · バックグラウンド BLE 維持 (silent audio + UIBackgroundTask + watchdog + 3 AVAudioSession observer)",
+    cat_profile: "使用量統計 (実測累積)",
+    cat_profile_desc: "ログインはオプション (非ログインでも100%動作) · 本人使用累積: 52セッション / 31日記 / <strong>総録画 2,228時間35分</strong> / データ使用量 231.9 MB · 多日·多週連続録画の安定性実証",
     principles_title: "4大運営原則",
     principles_intro: "すべての機能・人事・外部発信の決定は次の4原則に沿わなければならない。",
     p1_title: "患者優先 (Patient-First)",
@@ -1529,9 +1525,8 @@ function renderWeaponModal(num) {
   imgContainer.innerHTML = '';
   if (data.images && data.images.length > 0) {
     data.images.forEach(idx => {
-      const ext = (idx === 29) ? 'jpeg' : 'png';
       const img = document.createElement('img');
-      img.src = `assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-${idx}.${ext}`;
+      img.src = `assets/screenshots/${promoBase}-${idx}.png`;
       img.alt = `Weapon ${num} capture ${idx}`;
       img.loading = 'lazy';
       img.addEventListener('click', () => {
@@ -1582,19 +1577,7 @@ document.querySelectorAll('#mode-toggle .toggle-btn').forEach(btn => {
   });
 });
 
-// === Populate all-screens grid (detail mode) ===
-const allGrid = document.getElementById('all-screens');
-if (allGrid) {
-  // 1~54 (jpeg for 29)
-  for (let i = 1; i <= 54; i++) {
-    const ext = (i === 29) ? 'jpeg' : 'png';
-    const img = document.createElement('img');
-    img.src = `assets/screenshots/KakaoTalk_Photo_2026-05-14-22-02-54-${i}.${ext}`;
-    img.alt = `Capture ${i}`;
-    img.loading = 'lazy';
-    allGrid.appendChild(img);
-  }
-}
+// (전체 캡쳐 섹션 제거됨 — 9장만 § 04에 카테고리화)
 
 // === Lightbox ===
 const lightbox = document.getElementById('lightbox');
